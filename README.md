@@ -1,8 +1,10 @@
 # Building WD NAS apps
 
-This is a repository for me to learn how to build apps for the WD NAS machines running OS5 *(FW > 5.27.157 - Debian Bullseye)*.
+This is a repository to build current versions of common apps for the WD NAS machines running OS5 *(FW > 5.27.157 - Debian Bullseye)*.
 
-The goal is to build a [Jellyfin server for WD devices](https://features.jellyfin.org/posts/220/port-to-wd-nas-western-digital-pr4100) without the need for Docker / external packages so that hardware transcoding is possible. Dozens of us are itching to ditch Plex, dozens...
+Generally the goal is to build current versions of popular software.
+
+In it's original form, the goal was to provide a [Jellyfin server for WD devices](https://features.jellyfin.org/posts/220/port-to-wd-nas-western-digital-pr4100) without the need for Docker / external packages so that hardware transcoding is possible. Dozens of us are itching to ditch Plex, dozens..
 
 ## Building an existing app
 
@@ -18,7 +20,12 @@ If you don't have docker installed, see the [guide](docker/README.md) in the `do
 
 ## Existing Apps
 
-Here is a list of apps that have been created or ported:
+Being Regularly Updated:
+- [Syncthing 2.0.13](https://github.com/syncthing/syncthing/releases/download/v2.0.13/syncthing-linux-amd64-v2.0.13.tar.gz)
+- [Tailscale 1.92.5](https://pkgs.tailscale.com/stable/tailscale_1.92.5_amd64.tgz)
+
+
+Untested app configurations probably work (mostly) fine, but are not yet up-to-date or automatically updated:
 
 - [Node 23.5.0](https://nodejs.org/dist/v23.5.0/node-v23.5.0-linux-x64.tar.xz)
 - [Go 1.23.4](https://go.dev/dl/go1.23.4.linux-amd64.tar.gz)
@@ -27,8 +34,6 @@ Here is a list of apps that have been created or ported:
 - [ValKey 8.0.1](https://github.com/valkey-io/valkey/archive/refs/tags/8.0.1.tar.gz)
 - [Docker 29.1.3](https://download.docker.com/linux/static/stable/x86_64/docker-29.1.3.tgz) / [Docker-Compose 2.39.4](https://github.com/docker/compose/releases/download/v2.39.4/docker-compose-linux-x86_64) / [Portainer 2.25.1](https://github.com/portainer/portainer/releases/download/2.25.1/portainer-2.25.1-linux-amd64.tar.gz)
   - *Note: On at least the PR4100, all ports are on the same network interface. Running containers that expose ports already in use by the NAS (like 80 or 443) will cause conflicts.*
-- [Syncthing 2.0.13](https://github.com/syncthing/syncthing/releases/download/v2.0.13/syncthing-linux-amd64-v2.0.13.tar.gz)
-- [Tailscale 1.92.5](https://pkgs.tailscale.com/stable/tailscale_1.92.5_amd64.tgz)
 
 # Creating a new app
 
@@ -65,11 +70,7 @@ The statically linked files will be created in `/packages/static/<static_app_nam
   - ---
   - `/packages` - the built apps (static and for devices)
 
-## Current progress report
-
-- [x] Understand the WD app basics
-  - [x] Create a template to expedite future app creation
-- [x] Create something new, but simple (`nodejs` app)
+## Native Jellyfin progress report
 - [x] Test wrapping existing Jellyfin Debian builds (`jellyfin` app)
   - [x] Installs
   - [x] Runs
@@ -88,11 +89,15 @@ The statically linked files will be created in `/packages/static/<static_app_nam
 
 ## Where to find other apps?
 
-There's a list of compiled apps:
+Not sure.
 
-- [First Party](https://community.wd.com/t/apps-my-cloud-os5-apps-matrix/286467)
-- [Third Party](https://community.wd.com/t/apps-my-cloud-os5-apps-matrix-third-party/286505)
+## Disclaimer
+
+GenAI has absolutely touched this repo, but things are (should be, ugh) manually checked/tested.
 
 ## Inspiration / acknowledgements
+
+The base of this is [https://github.com/paul-norman/WD-NAS-App-Builder], but the focus is more generally on trying to provide updated builds of common apps, not just getting Jellyfin running.
+
 
 This project is building principally upon work done by [Stefan (aka TFL)](https://github.com/stefaang) in the [WDCommunity](https://github.com/WDCommunity/wdpksrc/) Github Repo, but the `helper.sh` script was heavily influenced by Cerberus's [App Template](https://drive.google.com/uc?export=download&id=1Qds0Nh2o4DPlGG6WfIlXLkcChsZlqrp7) from the [WD Community Support forums](https://community.wd.com/t/my-cloud-os5-app-template/286542).
