@@ -16,6 +16,20 @@ The WD bin files will be created in `/packages/<app_name>/<version>/*`. A file c
 
 If you don't have docker installed, see the [guide](docker/README.md) in the `docker` directory. If you're on Windows 10 or 11, see the [Windows guide](docker/WINDOWS.md) for WSL / docker installation.
 
+## Existing Apps
+
+Here is a list of apps that have been created or ported:
+
+- [Node 23.5.0](https://nodejs.org/dist/v23.5.0/node-v23.5.0-linux-x64.tar.xz)
+- [Go 1.23.4](https://go.dev/dl/go1.23.4.linux-amd64.tar.gz)
+- [phpMyAdmin 5.2.1](https://files.phpmyadmin.net/phpMyAdmin/5.2.1/phpMyAdmin-5.2.1-all-languages.tar.gz)
+- [Mailpit 1.21.8](https://github.com/axllent/mailpit/releases/download/v1.21.8/mailpit-linux-amd64.tar.gz)
+- [ValKey 8.0.1](https://github.com/valkey-io/valkey/archive/refs/tags/8.0.1.tar.gz)
+- [Docker 29.1.3](https://download.docker.com/linux/static/stable/x86_64/docker-29.1.3.tgz) / [Docker-Compose 2.39.4](https://github.com/docker/compose/releases/download/v2.39.4/docker-compose-linux-x86_64) / [Portainer 2.25.1](https://github.com/portainer/portainer/releases/download/2.25.1/portainer-2.25.1-linux-amd64.tar.gz)
+  - *Note: On at least the PR4100, all ports are on the same network interface. Running containers that expose ports already in use by the NAS (like 80 or 443) will cause conflicts.*
+- [Syncthing 2.0.13](https://github.com/syncthing/syncthing/releases/download/v2.0.13/syncthing-linux-amd64-v2.0.13.tar.gz)
+- [Tailscale 1.92.5](https://pkgs.tailscale.com/stable/tailscale_1.92.5_amd64.tgz)
+
 # Creating a new app
 
 - Copy the `apps/template` app directory and create a new app directory from it in the same parent directory.
@@ -70,15 +84,7 @@ The statically linked files will be created in `/packages/static/<static_app_nam
   - [ ] SSH config to the WD NAS device
   - [ ] Create test file format / helpers
 - [ ] Find others willing to help / test *(preferably someone with an ARM based NAS device)*
-- [ ] Create some new, really simple, potentially useful, stand-alone apps. *(No need to be novel, perhaps directly out of Entware ipk files to begin with?)*. Some ideas:
-  - [x] [Node 23.5.0](https://nodejs.org/dist/v23.5.0/node-v23.5.0-linux-x64.tar.xz)
-  - [x] [Go 1.23.4](https://go.dev/dl/go1.23.4.linux-amd64.tar.gz)
-  - [x] [phpMyAdmin 5.2.1](https://files.phpmyadmin.net/phpMyAdmin/5.2.1/phpMyAdmin-5.2.1-all-languages.tar.gz)
-  - [x] [Mailpit 1.21.8](https://github.com/axllent/mailpit/releases/download/v1.21.8/mailpit-linux-amd64.tar.gz)
-  - [x] [ValKey 8.0.1](https://github.com/valkey-io/valkey/archive/refs/tags/8.0.1.tar.gz)
-  - [x] [Docker 27.4.1](https://download.docker.com/linux/static/stable/x86_64/docker-27.4.1.tgz) / [Docker-Compose 2.32.1](https://github.com/docker/compose/releases/download/v2.32.1/docker-compose-linux-x86_64) / [Portainer 2.25.1](https://github.com/portainer/portainer/releases/download/2.25.1/portainer-2.25.1-linux-amd64.tar.gz)
-  - [ ] [PHP 8.4]
-  - [ ] [Git 2.47.1](https://bin.entware.net/x64-k3.2/git_2.39.2-1_x64-3.2.ipk)
+
 
 ## Where to find other apps?
 
