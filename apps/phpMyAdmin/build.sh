@@ -5,24 +5,25 @@
 mkdir -p binaries
 cd binaries
 
-PMA_REPO="https://files.phpmyadmin.net/phpMyAdmin/${APKG_VERSION}/phpMyAdmin-${APKG_VERSION}-all-languages.tar.gz"
+FILENAME="phpMyAdmin-${APKG_VERSION}-all-languages.tar.gz"
+PMA_REPO="https://files.phpmyadmin.net/phpMyAdmin/${APKG_VERSION}/${FILENAME}"
 
 # Download and extract the right version of phpMyAdmin
-wget ${PMA_REPO} -O pma.tar.gz
+download "${PMA_REPO}" "${FILENAME}"
 
 # Extract the data
-if [ -f pma.tar.gz ]; then
-	tar -xf pma.tar.gz
-	rm pma.tar.gz
+if [ -f "${FILENAME}" ]; then
+	tar -xf "${FILENAME}"
+	rm "${FILENAME}"
 	DIR=$(ls | head -n 1)
 	if [ -d ${DIR} ] && [ "${DIR}" != "" ]; then
 		mv ${DIR}/* .
 		rm -rf ${DIR}
 	else
-		abort "$(pwd)/pma.tar.gz could not be extracted"
+		abort "$(pwd)/${FILENAME} could not be extracted"
 	fi
 else
-	abort "$(pwd)/pma.tar.gz could not be downloaded"
+	abort "$(pwd)/${FILENAME} could not be downloaded"
 fi
 
 cd ../

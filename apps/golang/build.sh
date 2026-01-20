@@ -7,19 +7,20 @@ MODELS[amd64]="MyCloudPR4100 MyCloudPR2100 WDMyCloudDL4100 WDMyCloudDL2100"
 #MODELS[armhf]="WDCloud WDMyCloud WDMyCloudMirror WDMyCloudEX4100 WDMyCloudEX2100 MyCloudEX2Ultra"
 
 for ARCH in "${!MODELS[@]}"; do
-	GO_REPO="https://go.dev/dl/go${APKG_VERSION}.linux-${ARCH}.tar.gz"
+	FILENAME="go${APKG_VERSION}.linux-${ARCH}.tar.gz"
+	GO_REPO="https://go.dev/dl/${FILENAME}"
 
 	# Make a directory for the files
 	mkdir -p binaries
 	cd binaries
 	
 	# Download and extract the right version of Go
-	wget ${GO_REPO} -O go.tar.gz
+	download "${GO_REPO}" "${FILENAME}"
 	
 	# Extract the data
-	if [ -f go.tar.gz ]; then
-		tar -xf go.tar.gz
-		rm go.tar.gz
+	if [ -f "${FILENAME}" ]; then
+		tar -xf "${FILENAME}"
+		rm "${FILENAME}"
 		DIR=$(ls | head -n 1)
 		if [ -d ${DIR} ] && [ "${DIR}" != "" ]; then
 			mv ${DIR}/* .

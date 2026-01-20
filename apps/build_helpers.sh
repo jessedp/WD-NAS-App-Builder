@@ -12,8 +12,33 @@ if [ -z ${APP_PATH+x} ]; then
 	APPS_PATH="$(dirname ${APP_PATH})"
 	REPO_PATH="$(dirname ${APPS_PATH})"
 	RELEASE_DIR="../../packages/${APP_NAME}/${APP_VERSION}"
+	DOWNLOAD_CACHE_DIR="${REPO_PATH}/downloads"
 
 	# DECLARE FUNCTIONS --------------------------------------------------------
+
+	# Downloads a file from a URL and caches it in the downloads directory
+	download() {
+		url=$1
+		filename=$2
+		if [ -z "$filename" ]; then
+			filename=$(basename "$url")
+		fi
+
+		mkdir -p "${DOWNLOAD_CACHE_DIR}"
+		
+		if [ ! -f "${DOWNLOAD_CACHE_DIR}/${filename}" ]; then
+			echo "Downloading ${filename}..."
+			curl -L -o "${DOWNLOAD_CACHE_DIR}/${filename}" "$url"
+			if [ $? -ne 0 ]; then
+				echo "Download failed!"
+				return 1
+			fi
+		else
+			echo "Using cached ${filename}"
+		fi
+		
+		cp "${DOWNLOAD_CACHE_DIR}/${filename}" .
+	}
 
 	# Build function accepts an array of WD NAS device models and builds for all of them
 	build() {

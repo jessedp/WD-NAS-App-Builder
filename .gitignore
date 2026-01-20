@@ -1,4 +1,5 @@
 /packages
+/downloads
 /__MACOSX
 native/*/work*
 cross/*/work*

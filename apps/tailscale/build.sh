@@ -15,16 +15,18 @@ for ARCH in "${!MODELS[@]}"; do
 		TS_ARCH="arm"
 	fi
 	
-	echo "Downloading Tailscale for $ARCH ($TS_ARCH)..."
-	wget -q --no-check-certificate https://pkgs.tailscale.com/stable/tailscale_${TAILSCALE_VERSION}_${TS_ARCH}.tgz
-	tar xzf tailscale_${TAILSCALE_VERSION}_${TS_ARCH}.tgz
+	FILENAME="tailscale_${TAILSCALE_VERSION}_${TS_ARCH}.tgz"
+	URL="https://pkgs.tailscale.com/stable/${FILENAME}"
+	
+	download "$URL" "$FILENAME"
+	tar xzf "$FILENAME"
 	
 	# Move binaries to root
 	mv tailscale_${TAILSCALE_VERSION}_${TS_ARCH}/tailscale .
 	mv tailscale_${TAILSCALE_VERSION}_${TS_ARCH}/tailscaled .
 	
 	# Cleanup tar and dir
-	rm tailscale_${TAILSCALE_VERSION}_${TS_ARCH}.tgz
+	rm "$FILENAME"
 	rm -rf tailscale_${TAILSCALE_VERSION}_${TS_ARCH}
 
 	# Build the archive for all models of this architecture

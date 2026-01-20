@@ -7,19 +7,20 @@ MODELS[x64]="MyCloudPR4100 MyCloudPR2100 WDMyCloudDL4100 WDMyCloudDL2100"
 MODELS[armv7l]="WDCloud WDMyCloud WDMyCloudMirror WDMyCloudEX4100 WDMyCloudEX2100 MyCloudEX2Ultra"
 
 for ARCH in "${!MODELS[@]}"; do
-	NODE_REPO="https://nodejs.org/dist/v${APP_VERSION}/node-v${APP_VERSION}-linux-${ARCH}.tar.xz"
+	FILENAME="node-v${APP_VERSION}-linux-${ARCH}.tar.xz"
+	NODE_REPO="https://nodejs.org/dist/v${APP_VERSION}/${FILENAME}"
 	
 	# Make a directory for the files
 	mkdir -p binaries
 	cd binaries
 	
 	# Download and extract the right version of Node.js
-	wget ${NODE_REPO} -O nodejs.tar.xz
+	download "${NODE_REPO}" "${FILENAME}"
 	
 	# Extract the data
-	if [ -f nodejs.tar.xz ]; then
-		tar -xf nodejs.tar.xz
-		rm nodejs.tar.xz
+	if [ -f "${FILENAME}" ]; then
+		tar -xf "${FILENAME}"
+		rm "${FILENAME}"
 		DIR=$(ls | head -n 1)
 		if [ -d ${DIR} ] && [ "${DIR}" != "" ]; then
 			mv ${DIR}/* .

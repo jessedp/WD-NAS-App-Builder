@@ -18,26 +18,28 @@ for ARCH in "${!MODELS[@]}"; do
     echo -e "\nPreparing Syncthing ${ST_VERSION} for ${ARCH}..."
     
     if [ "$ARCH" == "amd64" ]; then
-        URL="https://github.com/syncthing/syncthing/releases/download/${ST_VERSION}/syncthing-linux-amd64-${ST_VERSION}.tar.gz"
+        ST_ARCH="amd64"
     elif [ "$ARCH" == "armhf" ]; then
         # Using linux-arm (ARMv5) for broad compatibility on armhf devices
-        URL="https://github.com/syncthing/syncthing/releases/download/${ST_VERSION}/syncthing-linux-arm-${ST_VERSION}.tar.gz"
+        ST_ARCH="arm"
     fi
 
-    echo "Downloading from: $URL"
-    curl -L -o syncthing.tar.gz "$URL"
+    FILENAME="syncthing-linux-${ST_ARCH}-${ST_VERSION}.tar.gz"
+    URL="https://github.com/syncthing/syncthing/releases/download/${ST_VERSION}/${FILENAME}"
+
+    download "$URL" "$FILENAME"
     
-    if [ $? -ne 0 ]; then
+    if [ ! -f "$FILENAME" ]; then
         echo "Download failed!"
         exit 1
     fi
     
     echo "Extracting..."
-    tar -xzf syncthing.tar.gz
+    tar -xzf "$FILENAME"
     
     # The tarball extracts to a folder named like syncthing-linux-amd64-v1.27.2
     # We need to find the binary inside and move it to root
-    EXTRACTED_DIR=$(tar -tf syncthing.tar.gz | head -1 | cut -f1 -d"/")
+    EXTRACTED_DIR=$(tar -tf "$FILENAME" | head -1 | cut -f1 -d"/")
     echo "Moving binary from ${EXTRACTED_DIR}/syncthing to ."
     cp "${EXTRACTED_DIR}/syncthing" .
     chmod +x syncthing
@@ -45,7 +47,7 @@ for ARCH in "${!MODELS[@]}"; do
 	build ${MODELS[${ARCH}]} ${ARCH}
     
     # Cleanup for next iteration
-    rm -rf "${EXTRACTED_DIR}" syncthing.tar.gz syncthing
+    rm -rf "${EXTRACTED_DIR}" "$FILENAME" syncthing
 done
 
 # Cleanup

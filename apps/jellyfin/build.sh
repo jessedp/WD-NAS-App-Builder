@@ -22,15 +22,16 @@ for ARCH in "${!MODELS[@]}"; do
 	cd binaries
 	
 	# Download and extract the right version of Jellyfin
-	wget ${JELLYFIN_REPO} -O jellyfin.deb
+	JELLYFIN_FILENAME="jellyfin-server_${Jellyfin}_${ARCH}.deb"
+	download "${JELLYFIN_REPO}" "${JELLYFIN_FILENAME}"
 	
 	# Extract the archive
-	if [ -f jellyfin.deb ]; then
-		ar x jellyfin.deb
-		rm jellyfin.deb
+	if [ -f "${JELLYFIN_FILENAME}" ]; then
+		ar x "${JELLYFIN_FILENAME}"
+		rm "${JELLYFIN_FILENAME}"
 		rm debian-binary
 	else
-		abort "$(pwd)/jellyfin.deb could not be extracted"
+		abort "$(pwd)/${JELLYFIN_FILENAME} could not be extracted"
 	fi
 	
 	# Extract the data
@@ -46,37 +47,16 @@ for ARCH in "${!MODELS[@]}"; do
 	mkdir -p ffmpeg
 	cd ffmpeg
 	
-	# TODO: try to build this statically
-	# Download and extract the right version of FFMPEG
-	#wget ${FFMPEG_REPO} -O ffmpeg.deb
-	
-	# Extract the archive
-	#if [ -f ffmpeg.deb ]; then
-	#	ar x ffmpeg.deb
-	#	rm ffmpeg.deb
-	#	rm debian-binary
-	#else
-	#	abort "$(pwd)/ffmpeg.deb could not be extracted"
-	#fi
-
-	# Extract the data
-	#if [ -f data.tar.xz ]; then
-	#	tar -xf data.tar.xz
-	#	rm data.tar.xz
-	#	rm control.tar.xz
-	#else
-	#	abort "$(pwd)/data.tar.xz could not be extracted"
-	#fi
-	
 	# For now we'll just use generic statically linked FFMPEG
-	wget "https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-${ARCH}-static.tar.xz" -O ffmpeg.tar.xz
-	if [ -f ffmpeg.tar.xz ]; then
-		tar -xf ffmpeg.tar.xz
-		rm ffmpeg.tar.xz
+	FFMPEG_FILENAME="ffmpeg-release-${ARCH}-static.tar.xz"
+	download "https://johnvansickle.com/ffmpeg/releases/${FFMPEG_FILENAME}" "${FFMPEG_FILENAME}"
+	if [ -f "${FFMPEG_FILENAME}" ]; then
+		tar -xf "${FFMPEG_FILENAME}"
+		rm "${FFMPEG_FILENAME}"
 		DIR=$(ls | head -n 1)
 		mv ${DIR} bin
 	else
-		abort "$(pwd)/ffmpeg.tar.xz could not be extracted"
+		abort "$(pwd)/${FFMPEG_FILENAME} could not be extracted"
 	fi
 	
 	# Make a subdirectory to store Jellyfin Web
@@ -85,15 +65,16 @@ for ARCH in "${!MODELS[@]}"; do
 	cd jellyfin-web
 	
 	# Download and extract the right version of FFMPEG
-	wget ${JELLYFIN_WEB_REPO} -O jellyfinweb.deb
+	JELLYFIN_WEB_FILENAME="jellyfin-web_${Jellyfin}_all.deb"
+	download "${JELLYFIN_WEB_REPO}" "${JELLYFIN_WEB_FILENAME}"
 	
 	# Extract the archive
-	if [ -f jellyfinweb.deb ]; then
-		ar x jellyfinweb.deb
-		rm jellyfinweb.deb
+	if [ -f "${JELLYFIN_WEB_FILENAME}" ]; then
+		ar x "${JELLYFIN_WEB_FILENAME}"
+		rm "${JELLYFIN_WEB_FILENAME}"
 		rm debian-binary
 	else
-		abort "$(pwd)/jellyfinweb.deb could not be extracted"
+		abort "$(pwd)/${JELLYFIN_WEB_FILENAME} could not be extracted"
 	fi
 
 	# Extract the data

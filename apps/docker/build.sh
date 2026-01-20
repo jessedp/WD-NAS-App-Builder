@@ -15,7 +15,9 @@ for ARCH in "${!MODELS[@]}"; do
 		ARCH1="armv7"
 	fi
 			
+	DOCKER_FILENAME="docker-${APKG_VERSION}-${ARCH}.tgz"
 	DOCKER_REPO="https://download.docker.com/linux/static/stable/${ARCH}/docker-${APKG_VERSION}.tgz"
+	COMPOSE_FILENAME="docker-compose-linux-${ARCH1}-${COMPOSE_VERSION}"
 	COMPOSE_REPO="https://github.com/docker/compose/releases/download/v${COMPOSE_VERSION}/docker-compose-linux-${ARCH1}"
 	
 	# Make a directory for the files
@@ -23,18 +25,19 @@ for ARCH in "${!MODELS[@]}"; do
 	cd binaries
 
 	# Download and extract the right version of Docker
-	wget ${DOCKER_REPO} -O docker.tar.gz
+	download "${DOCKER_REPO}" "${DOCKER_FILENAME}"
 
 	# Extract the data
-	if [ -f docker.tar.gz ]; then
-		tar -xf docker.tar.gz --strip-components=1
-		rm docker.tar.gz
+	if [ -f "${DOCKER_FILENAME}" ]; then
+		tar -xf "${DOCKER_FILENAME}" --strip-components=1
+		rm "${DOCKER_FILENAME}"
 	else
-		abort "$(pwd)/docker.tar.gz could not be downloaded"
+		abort "$(pwd)/${DOCKER_FILENAME} could not be downloaded"
 	fi
 	
 	# Download the right version of Docker Compose
-	wget ${COMPOSE_REPO} -O docker-compose
+	download "${COMPOSE_REPO}" "${COMPOSE_FILENAME}"
+	mv "${COMPOSE_FILENAME}" docker-compose
 	chmod +x docker-compose
 
 	cd ../
