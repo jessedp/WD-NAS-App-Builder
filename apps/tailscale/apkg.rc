@@ -1,0 +1,23 @@
+Package:			tailscale
+Version:			1.92.5
+Packager:			Jesse
+Email:
+Homepage:			https://tailscale.com
+Description:		The easiest, most secure way to use WireGuard and 2FA.
+Icon:				logo.svg
+AddonShowName:		Tailscale
+AddonIndexPage:		index.php
+AddonUsedPort:
+AddonDefaultPort:
+AddonDefaultGroup:
+AddonDefaultUser:
+InstDepend:
+InstConflict:
+StartDepend:
+StartConflict:
+CenterType:			0
+UserControl:		0
+MinFWVer:			5.27.157
+MaxFWVer:
+IndividualFlag:		1
+Hidden:				off
