@@ -4,10 +4,10 @@ Packager:			PDN
 Email:
 Homepage:
 Description:		A blank template app from which to begin development of new apps.
-Icon:				logo.svg
+Icon:		 	syncthing.png
 AddonShowName:		Syncthing
-AddonIndexPage:		#	
-AddonUsedPort:		8384
+AddonIndexPage:		index.php	
+AddonUsedPort:
 AddonDefaultPort:
 AddonDefaultGroup:
 AddonDefaultUser:

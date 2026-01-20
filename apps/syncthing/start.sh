@@ -36,6 +36,10 @@ if [ ! -d "${CONFIG_DIR}" ]; then
     mkdir -p "${CONFIG_DIR}"
 fi
 
+# Debug: Print version to main log
+log "Checking binary version..."
+${ST_BIN} --version >> ${LOG} 2>&1
+
 # Syncthing arguments:
 # -home: config directory
 # -no-browser: don't open browser
@@ -43,13 +47,14 @@ fi
 # -logfile: log file path (optional, but good for debugging)
 
 export HOME="${CONFIG_DIR}"
+export STNOUPGRADE=1
 
-log "COMMAND: ${ST_BIN} -home=${CONFIG_DIR} -no-browser -gui-address=0.0.0.0:${APKG_ADDON_USED_PORT}"
+log "COMMAND: ${ST_BIN} -home=${CONFIG_DIR} -no-browser -gui-address=0.0.0.0:8384"
 
 nohup ${ST_BIN} \
-    -home="${CONFIG_DIR}" \
-    -no-browser \
-    -gui-address="0.0.0.0:${APKG_ADDON_USED_PORT}" \
+    --home="${CONFIG_DIR}" \
+    --no-browser \
+    --gui-address="0.0.0.0:8384" \
     > "${APP_PATH}/syncthing.log" 2>&1 &
 
 echo $! > ${PID_FILE}
