@@ -1,0 +1,23 @@
+Package:			syncthing	
+Version:			2.0.13
+Packager:			PDN
+Email:
+Homepage:
+Description:		A blank template app from which to begin development of new apps.
+Icon:				logo.svg
+AddonShowName:		Syncthing
+AddonIndexPage:		#	
+AddonUsedPort:		8384
+AddonDefaultPort:
+AddonDefaultGroup:
+AddonDefaultUser:
+InstDepend:
+InstConflict:
+StartDepend:
+StartConflict:
+CenterType:			0
+UserControl:		0
+MinFWVer:			5.27.157
+MaxFWVer:
+IndividualFlag:		1
+Hidden:				off

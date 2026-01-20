@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Building Syncthing &#8212; Syncthing documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=dea5b834" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <script src="../_static/documentation_options.js?v=766fbf83"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/jquery-3.7.1.min.js?v=94f7166b"></script>
+    <script src="../_static/version_redirect.js?v=39302caa"></script>
+    <link rel="icon" href="../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Contribution Guidelines" href="contributing.html" />
+    <link rel="prev" title="Working on the Web GUI" href="web.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="building-syncthing">
+<span id="building"></span><h1>Building Syncthing<a class="headerlink" href="#building-syncthing" title="Link to this heading">¶</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You probably only need to go through the build process if you are going
+to do development on Syncthing or if you need to do a special packaging
+of it. For all other purposes we recommend using the official binary
+releases instead.</p>
+<p>If you still prefer to build Syncthing from source for your own use, be
+aware that there is a built-in automatic upgrade mechanism that will
+overwrite your built binary with a downloaded version. To avoid this, you
+can use the <code class="docutils literal notranslate"><span class="pre">--no-upgrade</span></code> build flag (see below), but you will be
+responsible for your own upgrades.</p>
+</div>
+<section id="branches-and-tags">
+<h2>Branches and Tags<a class="headerlink" href="#branches-and-tags" title="Link to this heading">¶</a></h2>
+<p>You should base your work on the <code class="docutils literal notranslate"><span class="pre">main</span></code> branch when doing your
+development. This branch is usually what will be going into the next
+release and always what pull requests should be based on.</p>
+<p>If you’re looking to build and package a release of Syncthing you should
+instead use the latest tag (<code class="docutils literal notranslate"><span class="pre">vX.Y.Z</span></code>) as the contents of <code class="docutils literal notranslate"><span class="pre">main</span></code>
+may be unstable and unsuitable for general consumption.</p>
+</section>
+<section id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>The latest stable version of Go. The previous stable version should also
+work; older versions will likely not work. This largely follows Go’s
+<a class="reference external" href="https://go.dev/doc/devel/release#policy">Release Policy</a>.</p></li>
+<li><p>Usually, a C compiler. Syncthing uses SQLite for storing data and the
+most common implementation is written in C.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Don’t skip the C compiler, and make sure to build syncthing with
+<code class="docutils literal notranslate"><span class="pre">CGO_ENABLED=1</span></code> if you are cross compiling. While the build will succeed
+with <code class="docutils literal notranslate"><span class="pre">CGO_ENABLED=0</span></code> and the resulting binary will work, it will run
+with significantly lower performance and higher memory usage when the C
+implementation of SQLite couldn’t be used. Your users will not thank you.</p>
+</div>
+<ul class="simple">
+<li><p>Git, unless you’re building from a downloaded source tarball that includes
+a <code class="docutils literal notranslate"><span class="pre">RELEASE</span></code> marker with the version information.</p></li>
+<li><p>If you want to build Debian packages FPM is required. See FPM’s
+<a class="reference external" href="https://fpm.readthedocs.io/en/latest/installation.html">installation information</a>.</p></li>
+<li><p>To build Windows executables, installing <a class="reference external" href="https://github.com/josephspurrier/goversioninfo">goversioninfo</a> is recommended
+in order to add file properties and icon to the compiled binaries.</p></li>
+<li><p>Building Android binaries requires <a class="reference external" href="https://developer.android.com/ndk">Android NDK</a>.</p></li>
+</ul>
+<p>If you’re not already a Go developer, the easiest way to get going
+is to download the latest version of Go as instructed in
+<a class="reference external" href="https://go.dev/doc/install">https://go.dev/doc/install</a>.</p>
+</section>
+<section id="building-unix">
+<h2>Building (Unix)<a class="headerlink" href="#building-unix" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Install the prerequisites.</p></li>
+<li><p>Open a terminal.</p></li>
+<li><p>Run the commands below.</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Pick a place for your Syncthing source.</span>
+$<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>~/dev
+$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>~/dev
+
+<span class="c1"># Grab the code.</span>
+$<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/syncthing/syncthing.git
+
+<span class="c1"># Now we have the source. Time to build!</span>
+$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>syncthing
+
+<span class="c1"># You should be inside ~/dev/syncthing right now.</span>
+$<span class="w"> </span>go<span class="w"> </span>run<span class="w"> </span>build.go
+</pre></div>
+</div>
+<p>Unless something goes wrong, you will have a <code class="docutils literal notranslate"><span class="pre">syncthing</span></code> binary built
+and ready in <code class="docutils literal notranslate"><span class="pre">~/dev/syncthing/bin</span></code>.</p>
+</section>
+<section id="building-windows">
+<h2>Building (Windows)<a class="headerlink" href="#building-windows" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Install the prerequisites.</p></li>
+<li><p>Open a <code class="docutils literal notranslate"><span class="pre">cmd</span></code> Window.</p></li>
+<li><p>Run the commands below.</p></li>
+</ul>
+<div class="highlight-batch notranslate"><div class="highlight"><pre><span></span># Pick a place for your Syncthing source.
+<span class="p">&gt;</span> md <span class="s2">&quot;</span><span class="nv">%USERPROFILE%</span><span class="s2">\dev&quot;</span>
+<span class="p">&gt;</span> cd /d <span class="s2">&quot;</span><span class="nv">%USERPROFILE%</span><span class="s2">\dev&quot;</span>
+
+# Grab the code.
+<span class="p">&gt;</span> git clone https://github.com/syncthing/syncthing.git
+
+# Now we have the source. Time to build!
+<span class="p">&gt;</span> cd syncthing
+<span class="p">&gt;</span> go run build.go
+</pre></div>
+</div>
+<p>Unless something goes wrong, you will have a <code class="docutils literal notranslate"><span class="pre">syncthing.exe</span></code> binary
+built and ready in <code class="docutils literal notranslate"><span class="pre">%USERPROFILE%\dev\syncthing\bin</span></code>.</p>
+</section>
+<section id="subcommands-and-options">
+<h2>Subcommands and Options<a class="headerlink" href="#subcommands-and-options" title="Link to this heading">¶</a></h2>
+<p>The following <code class="docutils literal notranslate"><span class="pre">build.go</span></code> subcommands and options exist.</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">go</span> <span class="pre">run</span> <span class="pre">build.go</span> <span class="pre">install</span></code></dt><dd><p>Installs binaries in <code class="docutils literal notranslate"><span class="pre">./bin</span></code> (default command, this is what happens when
+build.go is run without any commands or parameters).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">go</span> <span class="pre">run</span> <span class="pre">build.go</span> <span class="pre">build</span></code></dt><dd><p>Builds just the named target, or <code class="docutils literal notranslate"><span class="pre">syncthing</span></code> by default, to the current
+directory. Use this when cross compiling, with parameters for what to cross
+compile to: <code class="docutils literal notranslate"><span class="pre">go</span> <span class="pre">run</span> <span class="pre">build.go</span> <span class="pre">--goos</span> <span class="pre">linux</span> <span class="pre">--goarch</span> <span class="pre">386</span> <span class="pre">build</span></code>. When
+cross compiling you need to have a C compiler for the target platform, and
+you need to let Go know how to invoke it. The <code class="docutils literal notranslate"><span class="pre">--cc</span></code> flag to build.go
+controls this, together with the environment variable <code class="docutils literal notranslate"><span class="pre">CGO_ENABLED=1</span></code>.
+For example, to cross build from Linux to Windows using Zig as the C
+compiler, <code class="docutils literal notranslate"><span class="pre">go</span> <span class="pre">run</span> <span class="pre">build.go</span> <span class="pre">-goos</span> <span class="pre">windows</span> <span class="pre">-goarch</span> <span class="pre">amd64</span> <span class="pre">-cc</span> <span class="pre">&quot;zig</span> <span class="pre">cc</span>
+<span class="pre">-target</span> <span class="pre">x86_64-windows&quot;</span> <span class="pre">build</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">go</span> <span class="pre">run</span> <span class="pre">build.go</span> <span class="pre">test</span></code></dt><dd><p>Runs the tests.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">go</span> <span class="pre">run</span> <span class="pre">build.go</span> <span class="pre">deb</span></code></dt><dd><p>Creates a Debian package in the current directory. Requires FPM
+and a Unixy build.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">go</span> <span class="pre">run</span> <span class="pre">build.go</span> <span class="pre">tar</span></code></dt><dd><p>Creates a Syncthing tar.gz dist file in the current directory. Assumes a
+Unixy build. Otherwise same considerations and parameters as for the
+<code class="docutils literal notranslate"><span class="pre">build</span></code> subcommand.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">go</span> <span class="pre">run</span> <span class="pre">build.go</span> <span class="pre">zip</span></code></dt><dd><p>Creates a Syncthing zip dist file in the current directory. Assumes a
+Windows build. Otherwise same considerations and parameters as for the
+<code class="docutils literal notranslate"><span class="pre">build</span></code> subcommand.</p>
+</dd>
+</dl>
+<p>The options <code class="docutils literal notranslate"><span class="pre">--no-upgrade</span></code>, <code class="docutils literal notranslate"><span class="pre">--goos</span></code> and <code class="docutils literal notranslate"><span class="pre">--goarch</span></code> can be given to
+influence <code class="docutils literal notranslate"><span class="pre">build</span></code>, <code class="docutils literal notranslate"><span class="pre">tar</span></code> and <code class="docutils literal notranslate"><span class="pre">zip</span></code>. Examples:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">go</span> <span class="pre">run</span> <span class="pre">build.go</span> <span class="pre">--goos</span> <span class="pre">linux</span> <span class="pre">--goarch</span> <span class="pre">386</span> <span class="pre">tar</span></code></dt><dd><p>Builds a tar.gz distribution of Syncthing for linux-386.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">go</span> <span class="pre">run</span> <span class="pre">build.go</span> <span class="pre">--goos</span> <span class="pre">windows</span> <span class="pre">--no-upgrade</span> <span class="pre">zip</span></code></dt><dd><p>Builds a zip distribution of Syncthing for Windows (current architecture) with
+upgrading disabled.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Cross compiling with C (<code class="docutils literal notranslate"><span class="pre">CGO_ENABLED=1</span></code>) can be non-trivial; nonetheless
+you should try to do so when at all possible. We use Zig to ease the pain;
+you can check our <a class="reference external" href="https://github.com/syncthing/syncthing/blob/main/.github/workflows/build-syncthing.yaml">build workflows</a>
+for inspiration.</p>
+</div>
+</section>
+<section id="version-tagging">
+<span id="versiontagging"></span><h2>Version Tagging<a class="headerlink" href="#version-tagging" title="Link to this heading">¶</a></h2>
+<p>The binaries are “tagged” with a version derived from the current Git commit
+(or the <code class="docutils literal notranslate"><span class="pre">RELEASE</span></code> file, see below) and the current username and hostname.
+The username and hostname can be overridden by the <code class="docutils literal notranslate"><span class="pre">BUILD_USER</span></code> and
+<code class="docutils literal notranslate"><span class="pre">BUILD_HOST</span></code> environment variables, for example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ BUILD_USER=builder BUILD_HOST=buildhost.local go run build.go
+$ ./bin/syncthing --version
+syncthing v1.8.0 ... builder@buildhost.local 2020-07-30 11:49:14 UTC
+</pre></div>
+</div>
+<p>In addition the timestamp (by default taken from the current Git commit) can
+be overridden by the <code class="docutils literal notranslate"><span class="pre">SOURCE_DATE_EPOCH</span></code> variable, in Unix epoch seconds.</p>
+</section>
+<section id="building-without-git">
+<h2>Building without Git<a class="headerlink" href="#building-without-git" title="Link to this heading">¶</a></h2>
+<p>Syncthing can be built perfectly fine from a source tarball of course.
+If the tarball is from our build server it contains a file called
+<code class="docutils literal notranslate"><span class="pre">RELEASE</span></code> that informs the build system of the version being
+built. If you’re building from a different source package, for example
+one automatically generated by GitHub, you must instead pass the
+<code class="docutils literal notranslate"><span class="pre">--version</span></code> flag to <code class="docutils literal notranslate"><span class="pre">build.go</span></code>.</p>
+<p>If you are building something that will be installed as a package
+(Debian, RPM, …) you almost certainly want to use <code class="docutils literal notranslate"><span class="pre">--no-upgrade</span></code> as
+well to prevent the built in upgrade system from being activated.</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">go</span> <span class="pre">run</span> <span class="pre">build.go</span> <span class="pre">--version</span> <span class="pre">v0.10.26</span> <span class="pre">--no-upgrade</span> <span class="pre">tar</span></code></dt><dd><p>Builds a tar.gz distribution of Syncthing for the current OS/arch, tagged as
+<code class="docutils literal notranslate"><span class="pre">v0.10.26</span></code>, with upgrades disabled.</p>
+</dd>
+</dl>
+</section>
+</section>
+
+
+          </div>
+<div class="body footer-body" role="footer">
+    <a class="reference external" href="https://github.com/syncthing/docs/edit/main/dev/building.rst" rel="nofollow">Edit this page on GitHub</a>
+    <br />
+    <small>Version: v2.0.0-27-ge33bb2d</small>
+</div>
+
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../index.html">
+    <img class="logo" src="../_static/logo-horizontal.svg" alt="Logo" />
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=syncthing&repo=syncthing&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<p>Written for v2.0.0</p>
+<hr /><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../intro/index.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../users/index.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Development</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="web.html">Working on the Web GUI</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Building Syncthing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html">Contribution Guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debugging.html">Debugging Syncthing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="crashrep.html">Automatic Crash Reporting for Developers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="device-ids.html">Understanding Device IDs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="infrastructure.html">Syncthing Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="issues.html">Issue Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="release-creation.html">Creating a Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="release-signing.html">Release Signing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rest.html">REST API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="events.html">Event API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="http-services.html">HTTP Utility Services API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../specs/index.html">Specifications</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Development</a><ul>
+      <li>Previous: <a href="web.html" title="previous chapter">Working on the Web GUI</a></li>
+      <li>Next: <a href="contributing.html" title="next chapter">Contribution Guidelines</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+<h3 class="donation">Donate/support</h3>
+
+
+
+<p>
+<a class="badge" href="https://syncthing.net/donations/">
+<img src="https://img.shields.io/badge/donate-%E2%9D%A4%C2%A0-ff69b4.svg?style=flat" alt="Donate">
+</a>
+</p>
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
