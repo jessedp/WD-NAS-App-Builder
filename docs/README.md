@@ -6,6 +6,7 @@ This directory contains detailed documentation for the applications and architec
 
 - [Tailscale](apps/tailscale/README.md)
 - [Syncthing](apps/syncthing/README.md)
+- [copyparty](apps/copyparty/README.md)
 
 ## Development Guides
 

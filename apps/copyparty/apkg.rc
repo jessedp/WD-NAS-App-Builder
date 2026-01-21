@@ -1,0 +1,23 @@
+Package:			copyparty
+Version:			1.20.3
+Packager:			Jesse
+Email:
+Homepage:			https://github.com/9001/copyparty
+Description:		Portable file server with accelerated resumable uploads, dedup, WebDAV, SFTP, FTP, TFTP, zeroconf, media indexer, thumbnails++ all in one file
+Icon:				logo.png
+AddonShowName:		copyparty
+AddonIndexPage:		index.php
+AddonUsedPort:		3923
+AddonDefaultPort:	3923
+AddonDefaultGroup:
+AddonDefaultUser:
+InstDepend:
+InstConflict:
+StartDepend:
+StartConflict:
+CenterType:			0
+UserControl:		0
+MinFWVer:			5.27.157
+MaxFWVer:
+IndividualFlag:		1
+Hidden:				off

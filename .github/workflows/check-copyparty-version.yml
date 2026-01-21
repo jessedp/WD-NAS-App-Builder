@@ -1,0 +1,118 @@
+name: Check copyparty Version
+
+on:
+  schedule:
+    # Run daily at 10 AM UTC
+    - cron: '0 10 * * *'
+  workflow_dispatch:
+    inputs:
+      force_check:
+        description: 'Force check for new version even if one exists'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  check-copyparty-version:
+    runs-on: ubuntu-latest
+    name: Check copyparty Version
+    
+    outputs:
+      new_version: ${{ steps.compare.outputs.new_version }}
+      version_changed: ${{ steps.compare.outputs.version_changed }}
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Fetch latest copyparty version from GitHub
+      id: fetch_latest
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "Fetching latest copyparty version from GitHub API..."
+        
+        # Get latest release from 9001/copyparty
+        RESPONSE=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" "https://api.github.com/repos/9001/copyparty/releases/latest")
+        
+        if [ -z "$RESPONSE" ]; then
+          echo "ERROR: Failed to fetch copyparty releases"
+          exit 1
+        fi
+        
+        # Extract version from response
+        LATEST_VERSION=$(echo "$RESPONSE" | grep -oP '"tag_name":\s*"\K[^"]+' | head -1)
+        
+        if [ -z "$LATEST_VERSION" ]; then
+          echo "ERROR: Could not extract version from GitHub API response"
+          exit 1
+        fi
+        
+        # Remove 'v' prefix if present for numerical comparison
+        VERSION_NUM=${LATEST_VERSION#v}
+        
+        echo "Latest copyparty version found: $LATEST_VERSION"
+        echo "latest_version=$LATEST_VERSION" >> $GITHUB_OUTPUT
+        echo "version_num=$VERSION_NUM" >> $GITHUB_OUTPUT
+
+    - name: Get latest GitHub release for copyparty in this repo
+      id: get_release
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { owner, repo } = context.repo;
+          const releases = await github.rest.repos.listReleases({ owner, repo, per_page: 100 });
+          const appReleases = releases.data.filter(r => r.tag_name && r.tag_name.startsWith('copyparty-v'));
+          
+          if (appReleases.length === 0) {
+            console.log('No existing copyparty releases found');
+            core.setOutput('current_version', '0.0.0');
+            return;
+          }
+          
+          appReleases.sort((a, b) => b.tag_name.localeCompare(a.tag_name));
+          const latest = appReleases[0].tag_name.replace('copyparty-v', '');
+          console.log(`Latest local copyparty version: ${latest}`);
+          core.setOutput('current_version', latest);
+
+    - name: Compare versions
+      id: compare
+      run: |
+        LATEST_VERSION="${{ steps.fetch_latest.outputs.version_num }}"
+        CURRENT_VERSION="${{ steps.get_release.outputs.current_version }}"
+        
+        echo "Latest version from upstream: $LATEST_VERSION"
+        echo "Current version in our releases: $CURRENT_VERSION"
+        
+        if [ "$LATEST_VERSION" != "$CURRENT_VERSION" ]; then
+          echo "✅ New version detected: $LATEST_VERSION"
+          echo "version_changed=true" >> $GITHUB_OUTPUT
+          echo "new_version=$LATEST_VERSION" >> $GITHUB_OUTPUT
+        else
+          echo "✅ No new version."
+          echo "version_changed=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Trigger build workflow if new version
+      if: steps.compare.outputs.version_changed == 'true' || github.event.inputs.force_check == 'true'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { owner, repo } = context.repo;
+          const newVersion = '${{ steps.compare.outputs.new_version }}';
+          
+          console.log(`Triggering build workflow for copyparty ${newVersion}`);
+          
+          await github.rest.actions.createWorkflowDispatch({
+            owner,
+            repo,
+            workflow_id: 'build-and-release.yml',
+            ref: 'main',
+            inputs: {
+              package: 'copyparty',
+              new_version: newVersion,
+              changelog: 'Automatically detected new version from upstream'
+            }
+          });
