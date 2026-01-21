@@ -23,6 +23,7 @@ If you don't have docker installed, see the [guide](docker/README.md) in the `do
 Being Regularly Updated:
 - [Syncthing 2.0.13](https://github.com/syncthing/syncthing/releases/download/v2.0.13/syncthing-linux-amd64-v2.0.13.tar.gz)
 - [Tailscale 1.92.5](https://pkgs.tailscale.com/stable/tailscale_1.92.5_amd64.tgz)
+- [copyparty 1.20.3](https://github.com/9001/copyparty/releases/latest/download/copyparty-sfx.py)
 
 
 Untested app configurations probably work (mostly) fine, but are not yet up-to-date or automatically updated:
