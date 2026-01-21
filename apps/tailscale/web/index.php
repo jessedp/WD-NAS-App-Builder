@@ -92,8 +92,20 @@ $ts_ip = trim(shell_exec($tailscale_bin . ' ip --4 2>/dev/null'));
         .status-on { background-color: #28a745; }
         .status-off { background-color: #6c757d; }
     </style>
-    <?php if ($web_pid): ?>
+    <script src="/web/jquery/js/jquery-3.5.1.min.js"></script>
     <script>
+        // Verify authentication with the NAS backend
+        $.ajax({
+            type: "PUT",
+            url: '/nas/v1/auth',
+            statusCode: {
+                403: function() {
+                    $('body').html('<h2 style="text-align:center; margin-top:40px;">Please login to the NAS to continue</h2>');
+                }
+            }
+        });
+
+        <?php if ($web_pid): ?>
         // Keep-alive heartbeat
         setInterval(function() {
             fetch('?heartbeat=1')
@@ -102,8 +114,8 @@ $ts_ip = trim(shell_exec($tailscale_bin . ' ip --4 2>/dev/null'));
                     if (data === 'stopped') window.location.reload();
                 });
         }, 60000);
+        <?php endif; ?>
     </script>
-    <?php endif; ?>
 </head>
 <body>
     <header>
