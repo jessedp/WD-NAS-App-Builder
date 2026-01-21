@@ -59,7 +59,7 @@ jobs:
 
     - name: Get latest GitHub release for Syncthing
       id: get_release
-      uses: actions/github-script@v6
+      uses: actions/github-script@v7
       with:
         script: |
           // Get all releases and find the latest Syncthing release
@@ -161,7 +161,7 @@ jobs:
 
     - name: Trigger build workflow if new version
       if: steps.compare.outputs.version_changed == 'true' || github.event.inputs.force_check == 'true'
-      uses: actions/github-script@v6
+      uses: actions/github-script@v7
       with:
         script: |
           const { owner, repo } = context.repo;
