@@ -281,20 +281,7 @@ jobs:
         draft: false
         prerelease: false
         files: |
-          packages/*.bin
-
-    - name: Create packages zip
-      run: |
-        cd packages
-        zip -r "../${{ inputs.package }}-${{ inputs.new_version }}-packages.zip" .
-        cd ..
-
-    - name: Update GitHub Release with Zip
-      uses: softprops/action-gh-release@v2
-      with:
-        tag_name: ${{ inputs.package }}-v${{ inputs.new_version }}
-        files: |
-          ${{ inputs.package }}-${{ inputs.new_version }}-packages.zip
+          packages/**/*.bin
 
     - name: Summary
       run: |
