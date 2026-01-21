@@ -1,10 +1,10 @@
 Package:			tailscale
 Version:			1.92.5
-Packager:			Jesse
-Email:
+Packager:			jessedp
+Email:              jessedp@gmail.com
 Homepage:			https://tailscale.com
 Description:		The easiest, most secure way to use WireGuard and 2FA.
-Icon:		 	tailscale.png
+Icon:		 	    tailscale.png
 AddonShowName:		Tailscale
 AddonIndexPage:		index.php
 AddonUsedPort:

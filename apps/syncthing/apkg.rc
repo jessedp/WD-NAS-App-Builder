@@ -1,10 +1,10 @@
 Package:			syncthing	
 Version:			2.0.13
-Packager:			PDN
-Email:
-Homepage:
-Description:		A blank template app from which to begin development of new apps.
-Icon:		 	syncthing.png
+Packager:			jessedp
+Email:              jessedp@gmail.com
+Homepage:           https://syncthing.net/
+Description:		Open Source Continuous File Synchronization 
+Icon:		 	    syncthing.png
 AddonShowName:		Syncthing
 AddonIndexPage:		index.php	
 AddonUsedPort:
