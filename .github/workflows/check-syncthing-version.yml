@@ -151,10 +151,10 @@ jobs:
             echo "WARNING: Could not fetch changelog"
             echo "changelog=" >> $GITHUB_OUTPUT
           else
-            # Extract body (changelog) from response
-            CHANGELOG=$(echo "$RESPONSE" | grep -oP '"body":\s*"\K[^"]+' | head -1)
-            # Escape newlines for GitHub Actions
-            CHANGELOG=$(echo "$CHANGELOG" | sed 's/\\n/ /g' | sed 's/"/"/g' | sed 's/\\r//g')
+            # Extract body (changelog) using jq for proper JSON parsing
+            CHANGELOG=$(echo "$RESPONSE" | jq -r '.body // "Changelog not available"')
+            # JSON-encode it for safe passage through GitHub Actions interpolation
+            CHANGELOG=$(echo "$CHANGELOG" | jq -Rs .)
             echo "changelog=$CHANGELOG" >> $GITHUB_OUTPUT
           fi
         fi
@@ -166,7 +166,7 @@ jobs:
         script: |
           const { owner, repo } = context.repo;
           const newVersion = '${{ steps.compare.outputs.new_version }}';
-          const changelog = '${{ steps.get_changelog.outputs.changelog }}';
+          const changelog = JSON.parse('${{ steps.get_changelog.outputs.changelog }}');
           
           console.log(`Triggering build workflow for Syncthing ${newVersion}`);
           
