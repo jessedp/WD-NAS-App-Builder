@@ -26,10 +26,9 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Setup Python for validation script
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
+    - name: Fetch latest main branch
+      run: |
+        git fetch origin main --no-tags --prune --depth=1 || git fetch origin main --no-tags --prune
 
     - name: Install required packages
       run: |
@@ -38,171 +37,278 @@ jobs:
 
     - name: Run package validation
       id: validate
+      shell: bash
       run: |
-        python3 -c "
-        import os
-        import re
-        import json
-        from pathlib import Path
-        
-        def read_apkg_rc(package_path):
-            '''Read and parse apkg.rc file'''
-            apkg_path = package_path / 'apkg.rc'
-            if not apkg_path.exists():
-                return None
-            
-            data = {}
-            with open(apkg_path, 'r') as f:
-                for line in f:
-                    line = line.strip()
-                    if ':' in line and not line.startswith('#'):
-                        key, value = line.split(':', 1)
-                        data[key.strip()] = value.strip()
-            return data
-        
-        def read_template_rc():
-            '''Read template apkg.rc for comparison'''
-            template_path = Path('apps/template/apkg.rc')
-            return read_apkg_rc(template_path)
-        
-        def find_icon_path(package_path, icon_name):
-            '''Find icon file in web directory'''
-            web_dirs = [package_path / 'web', package_path]
-            for web_dir in web_dirs:
-                for ext in ['png', 'svg', 'jpg', 'jpeg']:
-                    icon_path = web_dir / f'{icon_name}.{ext}'
-                    if icon_path.exists():
-                        return icon_path
-                    # Also check without extension
-                    icon_path = web_dir / icon_name
-                    if icon_path.exists():
-                        return icon_path
-            return None
-        
-        def validate_icon_file(icon_path):
-            '''Validate that icon is a PNG file'''
-            if not icon_path or not icon_path.exists():
-                return False, 'Icon file not found'
-            
-            # Check file type
-            import subprocess
-            result = subprocess.run(['file', str(icon_path)], capture_output=True, text=True)
-            file_output = result.stdout.lower()
-            
-            if 'png' not in file_output:
-                return False, f'Icon is not a PNG file: {file_output}'
-            
-            return True, 'Valid PNG icon'
-        
-        # Read template for comparison
-        template_data = read_template_rc()
-        if not template_data:
-            print('ERROR: Could not read template apkg.rc')
-            exit(1)
-        
-        # Validate results
-        validation_results = []
-        auto_updateable_apps = []
-        
-        # Get all app directories
-        apps_dir = Path('apps')
-        for app_dir in apps_dir.iterdir():
-            if not app_dir.is_dir():
-                continue
-            if app_dir.name in ['build_helpers.sh', 'apkg_helpers.sh', 'helpers.sh']:
-                continue
-                
-            package_name = app_dir.name
-            apkg_data = read_apkg_rc(app_dir)
-            
-            if not apkg_data:
-                validation_results.append({
-                    'package': package_name,
-                    'status': 'error',
-                    'message': 'No apkg.rc file found'
-                })
-                continue
-            
-            # Check for template defaults
-            issues = []
-            is_template = False
-            
-            # Check Package name
-            if apkg_data.get('Package', '').lower() in ['template', '']:
-                issues.append('Package name is template default or empty')
-                is_template = True
-            
-            # Check Version
-            version = apkg_data.get('Version', '')
-            if version in ['0.0.1', ''] or version == template_data.get('Version', ''):
-                issues.append('Version is template default or empty')
-                is_template = True
-            
-            # Check Description
-            description = apkg_data.get('Description', '')
-            template_desc = template_data.get('Description', '')
-            if description == template_desc or description.lower() in ['a blank template app from which to begin development of new apps.', '']:
-                issues.append('Description is template default or empty')
-                is_template = True
-            
-            # Check Icon
-            icon_name = apkg_data.get('Icon', '')
-            if icon_name in ['logo.svg', ''] or icon_name == template_data.get('Icon', ''):
-                issues.append('Icon is template default or empty')
-                is_template = True
-            else:
-                # Validate icon file exists and is PNG
-                icon_path = find_icon_path(app_dir, icon_name.replace('.png', '').replace('.svg', ''))
-                valid_icon, icon_message = validate_icon_file(icon_path)
-                if not valid_icon:
-                    issues.append(f'Icon validation failed: {icon_message}')
-            
-            # Check Homepage
-            homepage = apkg_data.get('Homepage', '')
-            if not homepage or homepage == template_data.get('Homepage', ''):
-                issues.append('Homepage is template default or empty')
-            
-            status = 'pass' if not issues else 'fail'
-            
-            validation_results.append({
-                'package': package_name,
-                'status': status,
-                'message': '; '.join(issues) if issues else 'All validation checks passed',
-                'is_template': is_template,
-                'version': version,
-                'description': description
-            })
-            
-            # Add to auto-updateable apps if not template and passes validation
-            if not is_template and status == 'pass':
-                auto_updateable_apps.append(package_name)
-        
-        # Output results
-        with open('validation_results.json', 'w') as f:
-            json.dump({
-                'validation_results': validation_results,
-                'auto_updateable_apps': auto_updateable_apps,
-                'total_packages': len(validation_results),
-                'template_packages': sum(1 for r in validation_results if r['is_template']),
-                'valid_packages': sum(1 for r in validation_results if r['status'] == 'pass'),
-                'invalid_packages': sum(1 for r in validation_results if r['status'] == 'fail')
-            }, f, indent=2)
-        
-        # Print summary
-        print(f'Package validation completed:')
-        print(f'- Total packages: {len(validation_results)}')
-        print(f'- Template packages: {sum(1 for r in validation_results if r[\"is_template\"])}')
-        print(f'- Valid packages: {sum(1 for r in validation_results if r[\"status\"] == \"pass\")}')
-        print(f'- Invalid packages: {sum(1 for r in validation_results if r[\"status\"] == \"fail\")}')
-        print(f'- Auto-updateable apps: {len(auto_updateable_apps)}')
-        print(f'Auto-updateable apps: {auto_updateable_apps}')
-        
-        # Set outputs for GitHub Actions
-        with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
-            f.write(f'valid_packages={sum(1 for r in validation_results if r[\"status\"] == \"pass\")}\n')
-            f.write(f'invalid_packages={sum(1 for r in validation_results if r[\"status\"] == \"fail\")}\n')
-            f.write(f'auto_updateable_apps={\" \".join(auto_updateable_apps)}\n')
-        "
+        set -euo pipefail
+
+        TEMPLATE_RC="apps/template/apkg.rc"
+        if [[ ! -f "$TEMPLATE_RC" ]]; then
+          echo "ERROR: Could not read template apkg.rc at $TEMPLATE_RC" >&2
+          exit 1
+        fi
+
+        trim() {
+          local s="$1"
+          s="${s#${s%%[![:space:]]*}}"
+          s="${s%${s##*[![:space:]]}}"
+          printf '%s' "$s"
+        }
+
+        get_rc_value() {
+          local file="$1"
+          local key="$2"
+
+          local line
+          line="$(grep -m1 -E "^${key}:" "$file" 2>/dev/null || true)"
+          line="${line#*:}"
+          trim "$line"
+        }
+
+        json_escape() {
+          local s="$1"
+          s="${s//\\/\\\\}"
+          s="${s//\"/\\\"}"
+          s="${s//$'\n'/\\n}"
+          s="${s//$'\r'/\\r}"
+          s="${s//$'\t'/\\t}"
+          printf '%s' "$s"
+        }
+
+        find_icon() {
+          local app_dir="$1"
+          local icon="$2"
+
+          local icon_base="${icon%.*}"
+          local search_name
+
+          for dir in "$app_dir/web" "$app_dir"; do
+            if [[ -n "$icon" && -f "$dir/$icon" ]]; then
+              printf '%s' "$dir/$icon"
+              return 0
+            fi
+
+            if [[ -n "$icon_base" ]]; then
+              for ext in png svg jpg jpeg; do
+                search_name="$icon_base.$ext"
+                if [[ -f "$dir/$search_name" ]]; then
+                  printf '%s' "$dir/$search_name"
+                  return 0
+                fi
+              done
+
+              if [[ -f "$dir/$icon_base" ]]; then
+                printf '%s' "$dir/$icon_base"
+                return 0
+              fi
+            fi
+          done
+
+          return 1
+        }
+
+        validate_icon_file() {
+          local icon_path="$1"
+
+          if [[ ! -f "$icon_path" ]]; then
+            echo "Icon file not found"
+            return 1
+          fi
+
+          local ft
+          ft="$(file -b "$icon_path" | tr '[:upper:]' '[:lower:]')"
+
+          case "$icon_path" in
+            *.png)
+              [[ "$ft" == *png* ]] || { echo "Icon is not a PNG file: $ft"; return 1; }
+              ;;
+            *.svg)
+              [[ "$ft" == *svg* ]] || { echo "Icon is not an SVG file: $ft"; return 1; }
+              ;;
+            *.jpg|*.jpeg)
+              [[ "$ft" == *jpeg* ]] || { echo "Icon is not a JPEG file: $ft"; return 1; }
+              ;;
+            *)
+              echo "Icon has unsupported extension (expected .png/.svg/.jpg/.jpeg)"
+              return 1
+              ;;
+          esac
+
+          echo "Valid icon"
+        }
+
+        template_package="$(get_rc_value "$TEMPLATE_RC" Package)"
+        template_version="$(get_rc_value "$TEMPLATE_RC" Version)"
+        template_description="$(get_rc_value "$TEMPLATE_RC" Description)"
+        template_addon_show_name="$(get_rc_value "$TEMPLATE_RC" AddonShowName)"
+
+        validation_results_file="validation_results.json"
+        auto_updateable_apps=()
+
+        total_packages=0
+        template_packages=0
+        valid_packages=0
+        invalid_packages=0
+
+        {
+          echo '{'
+          echo '  "validation_results": ['
+        } > "$validation_results_file"
+
+        first_result=1
+
+        for app_dir in apps/*; do
+          [[ -d "$app_dir" ]] || continue
+
+          app_name="$(basename "$app_dir")"
+          if [[ "$app_name" == "template" ]]; then
+            continue
+          fi
+
+          apkg_rc="$app_dir/apkg.rc"
+          total_packages=$((total_packages + 1))
+
+          issues=()
+          is_template=false
+
+          if [[ ! -f "$apkg_rc" ]]; then
+            issues+=("No apkg.rc file found")
+            status="fail"
+            message="${issues[0]}"
+            version=""
+            description=""
+          else
+            package="$(get_rc_value "$apkg_rc" Package)"
+            version="$(get_rc_value "$apkg_rc" Version)"
+            homepage="$(get_rc_value "$apkg_rc" Homepage)"
+            description="$(get_rc_value "$apkg_rc" Description)"
+            icon="$(get_rc_value "$apkg_rc" Icon)"
+            addon_show_name="$(get_rc_value "$apkg_rc" AddonShowName)"
+            index_page="$(get_rc_value "$apkg_rc" AddonIndexPage)"
+
+            if [[ -z "$package" ]]; then
+              issues+=("Package field is empty")
+            elif [[ "$package" == "$template_package" ]]; then
+              issues+=("Package is template default")
+              is_template=true
+            elif [[ "$package" != "$app_name" ]]; then
+              issues+=("Package field ($package) does not match directory name ($app_name)")
+            fi
+
+            if [[ -z "$version" ]]; then
+              issues+=("Version field is empty")
+            elif [[ "$version" == "$template_version" ]]; then
+              issues+=("Version is template default")
+              is_template=true
+            fi
+
+            if [[ -z "$description" ]]; then
+              issues+=("Description field is empty")
+            elif [[ "$description" == "$template_description" ]]; then
+              issues+=("Description is template default")
+              is_template=true
+            fi
+
+            if [[ -n "$addon_show_name" && "$addon_show_name" == "$template_addon_show_name" ]]; then
+              issues+=("AddonShowName is template default")
+              is_template=true
+            fi
+
+            if [[ -z "$homepage" ]]; then
+              issues+=("Homepage field is empty")
+            fi
+
+            if [[ -z "$icon" ]]; then
+              issues+=("Icon field is empty")
+            else
+              if icon_path="$(find_icon "$app_dir" "$icon")"; then
+                if ! icon_message="$(validate_icon_file "$icon_path")"; then
+                  issues+=("Icon validation failed: $icon_message")
+                fi
+              else
+                issues+=("Icon file not found for Icon=$icon")
+              fi
+            fi
+
+            if [[ -n "$index_page" ]]; then
+              if [[ ! -f "$app_dir/web/$index_page" && ! -f "$app_dir/$index_page" ]]; then
+                issues+=("AddonIndexPage not found: $index_page")
+              fi
+            fi
+
+            if (( ${#issues[@]} )); then
+              status="fail"
+              message="$(IFS='; '; echo "${issues[*]}")"
+            else
+              status="pass"
+              message="All validation checks passed"
+            fi
+          fi
+
+          if [[ "$is_template" == "true" ]]; then
+            template_packages=$((template_packages + 1))
+          fi
+
+          if [[ "$status" == "pass" ]]; then
+            valid_packages=$((valid_packages + 1))
+            if [[ "$is_template" != "true" ]]; then
+              auto_updateable_apps+=("$app_name")
+            fi
+          else
+            invalid_packages=$((invalid_packages + 1))
+          fi
+
+          obj="{\"package\":\"$(json_escape "$app_name")\",\"status\":\"$(json_escape "$status")\",\"message\":\"$(json_escape "$message")\",\"is_template\":$is_template,\"version\":\"$(json_escape "${version:-}")\",\"description\":\"$(json_escape "${description:-}")\"}"
+
+          if (( first_result )); then
+            printf '    %s\n' "$obj" >> "$validation_results_file"
+            first_result=0
+          else
+            printf '    ,%s\n' "$obj" >> "$validation_results_file"
+          fi
+        done
+
+        {
+          echo '  ],'
+          echo '  "auto_updateable_apps": ['
+        } >> "$validation_results_file"
+
+        first_app=1
+        for app in "${auto_updateable_apps[@]}"; do
+          if (( first_app )); then
+            printf '    "%s"\n' "$(json_escape "$app")" >> "$validation_results_file"
+            first_app=0
+          else
+            printf '    ,"%s"\n' "$(json_escape "$app")" >> "$validation_results_file"
+          fi
+        done
+
+        {
+          echo '  ],'
+          echo "  \"total_packages\": $total_packages,"
+          echo "  \"template_packages\": $template_packages,"
+          echo "  \"valid_packages\": $valid_packages,"
+          echo "  \"invalid_packages\": $invalid_packages"
+          echo '}'
+        } >> "$validation_results_file"
+
+        auto_updateable_apps_str=""
+        if (( ${#auto_updateable_apps[@]} )); then
+          auto_updateable_apps_str="${auto_updateable_apps[*]}"
+        fi
+
+        echo "Package validation completed:"
+        echo "- Total packages: $total_packages"
+        echo "- Template packages: $template_packages"
+        echo "- Valid packages: $valid_packages"
+        echo "- Invalid packages: $invalid_packages"
+        echo "- Auto-updateable apps: ${#auto_updateable_apps[@]}"
+        echo "Auto-updateable apps: $auto_updateable_apps_str"
+
+        {
+          echo "valid_packages=$valid_packages"
+          echo "invalid_packages=$invalid_packages"
+          echo "auto_updateable_apps=$auto_updateable_apps_str"
+        } >> "$GITHUB_OUTPUT"
 
     - name: Generate PR comment
       if: github.event_name == 'pull_request'
@@ -264,7 +370,8 @@ jobs:
           validation_results.json
 
     - name: Fail on validation errors
-      if: steps.validate.outcome == 'failure'
+      if: steps.validate.outputs.invalid_packages != '0'
       run: |
         echo "Package validation failed!"
+        echo "Invalid packages: ${{ steps.validate.outputs.invalid_packages }}"
         exit 1
