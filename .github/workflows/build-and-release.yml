@@ -252,12 +252,11 @@ jobs:
         fi
 
     - name: Create GitHub Release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      id: create_release
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ inputs.package }}-v${{ inputs.new_version }}
-        release_name: ${{ inputs.package }} v${{ inputs.new_version }}
+        name: ${{ inputs.package }} v${{ inputs.new_version }}
         body: |
           ## Changes in version ${{ inputs.new_version }}
           
@@ -275,16 +274,8 @@ jobs:
           Download the appropriate .bin file for your WD MyCloud device and install using the WD dashboard.
         draft: false
         prerelease: false
-
-    - name: Upload release assets
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: packages/
-        asset_name: ${{ inputs.package }}-${{ inputs.new_version }}-packages.zip
-        asset_content_type: application/zip
+        files: |
+          packages/*.bin
 
     - name: Create packages zip
       run: |
@@ -292,14 +283,12 @@ jobs:
         zip -r "../${{ inputs.package }}-${{ inputs.new_version }}-packages.zip" .
         cd ..
 
-    - name: Upload packages zip to release
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Update GitHub Release with Zip
+      uses: softprops/action-gh-release@v2
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ${{ inputs.package }}-${{ inputs.new_version }}-packages.zip
-        asset_content_type: application/zip
+        tag_name: ${{ inputs.package }}-v${{ inputs.new_version }}
+        files: |
+          ${{ inputs.package }}-${{ inputs.new_version }}-packages.zip
 
     - name: Summary
       run: |
