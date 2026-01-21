@@ -86,7 +86,7 @@ jobs:
         
         def read_template_rc():
             '''Read template apkg.rc for comparison'''
-            template_path = Path('apps/template/apkg.rc')
+            template_path = Path('apps/template')
             return read_apkg_rc(template_path)
         
         # Read template for comparison
