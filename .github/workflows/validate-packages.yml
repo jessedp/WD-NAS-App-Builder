@@ -1,0 +1,270 @@
+name: Validate Packages
+
+on:
+  push:
+    paths:
+      - 'apps/**/apkg.rc'
+      - 'apps/**/icon*'
+      - 'apps/**/logo.*'
+      - 'apps/**/index.php'
+  pull_request:
+    paths:
+      - 'apps/**/apkg.rc'
+      - 'apps/**/icon*'
+      - 'apps/**/logo.*'
+      - 'apps/**/index.php'
+  workflow_dispatch:
+
+jobs:
+  validate-packages:
+    runs-on: ubuntu-latest
+    name: Validate Package Files
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup Python for validation script
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install required packages
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y file
+
+    - name: Run package validation
+      id: validate
+      run: |
+        python3 -c "
+        import os
+        import re
+        import json
+        from pathlib import Path
+        
+        def read_apkg_rc(package_path):
+            '''Read and parse apkg.rc file'''
+            apkg_path = package_path / 'apkg.rc'
+            if not apkg_path.exists():
+                return None
+            
+            data = {}
+            with open(apkg_path, 'r') as f:
+                for line in f:
+                    line = line.strip()
+                    if ':' in line and not line.startswith('#'):
+                        key, value = line.split(':', 1)
+                        data[key.strip()] = value.strip()
+            return data
+        
+        def read_template_rc():
+            '''Read template apkg.rc for comparison'''
+            template_path = Path('apps/template/apkg.rc')
+            return read_apkg_rc(template_path)
+        
+        def find_icon_path(package_path, icon_name):
+            '''Find icon file in web directory'''
+            web_dirs = [package_path / 'web', package_path]
+            for web_dir in web_dirs:
+                for ext in ['png', 'svg', 'jpg', 'jpeg']:
+                    icon_path = web_dir / f'{icon_name}.{ext}'
+                    if icon_path.exists():
+                        return icon_path
+                    # Also check without extension
+                    icon_path = web_dir / icon_name
+                    if icon_path.exists():
+                        return icon_path
+            return None
+        
+        def validate_icon_file(icon_path):
+            '''Validate that icon is a PNG file'''
+            if not icon_path or not icon_path.exists():
+                return False, 'Icon file not found'
+            
+            # Check file type
+            import subprocess
+            result = subprocess.run(['file', str(icon_path)], capture_output=True, text=True)
+            file_output = result.stdout.lower()
+            
+            if 'png' not in file_output:
+                return False, f'Icon is not a PNG file: {file_output}'
+            
+            return True, 'Valid PNG icon'
+        
+        # Read template for comparison
+        template_data = read_template_rc()
+        if not template_data:
+            print('ERROR: Could not read template apkg.rc')
+            exit(1)
+        
+        # Validate results
+        validation_results = []
+        auto_updateable_apps = []
+        
+        # Get all app directories
+        apps_dir = Path('apps')
+        for app_dir in apps_dir.iterdir():
+            if not app_dir.is_dir():
+                continue
+            if app_dir.name in ['build_helpers.sh', 'apkg_helpers.sh', 'helpers.sh']:
+                continue
+                
+            package_name = app_dir.name
+            apkg_data = read_apkg_rc(app_dir)
+            
+            if not apkg_data:
+                validation_results.append({
+                    'package': package_name,
+                    'status': 'error',
+                    'message': 'No apkg.rc file found'
+                })
+                continue
+            
+            # Check for template defaults
+            issues = []
+            is_template = False
+            
+            # Check Package name
+            if apkg_data.get('Package', '').lower() in ['template', '']:
+                issues.append('Package name is template default or empty')
+                is_template = True
+            
+            # Check Version
+            version = apkg_data.get('Version', '')
+            if version in ['0.0.1', ''] or version == template_data.get('Version', ''):
+                issues.append('Version is template default or empty')
+                is_template = True
+            
+            # Check Description
+            description = apkg_data.get('Description', '')
+            template_desc = template_data.get('Description', '')
+            if description == template_desc or description.lower() in ['a blank template app from which to begin development of new apps.', '']:
+                issues.append('Description is template default or empty')
+                is_template = True
+            
+            # Check Icon
+            icon_name = apkg_data.get('Icon', '')
+            if icon_name in ['logo.svg', ''] or icon_name == template_data.get('Icon', ''):
+                issues.append('Icon is template default or empty')
+                is_template = True
+            else:
+                # Validate icon file exists and is PNG
+                icon_path = find_icon_path(app_dir, icon_name.replace('.png', '').replace('.svg', ''))
+                valid_icon, icon_message = validate_icon_file(icon_path)
+                if not valid_icon:
+                    issues.append(f'Icon validation failed: {icon_message}')
+            
+            # Check Homepage
+            homepage = apkg_data.get('Homepage', '')
+            if not homepage or homepage == template_data.get('Homepage', ''):
+                issues.append('Homepage is template default or empty')
+            
+            status = 'pass' if not issues else 'fail'
+            
+            validation_results.append({
+                'package': package_name,
+                'status': status,
+                'message': '; '.join(issues) if issues else 'All validation checks passed',
+                'is_template': is_template,
+                'version': version,
+                'description': description
+            })
+            
+            # Add to auto-updateable apps if not template and passes validation
+            if not is_template and status == 'pass':
+                auto_updateable_apps.append(package_name)
+        
+        # Output results
+        with open('validation_results.json', 'w') as f:
+            json.dump({
+                'validation_results': validation_results,
+                'auto_updateable_apps': auto_updateable_apps,
+                'total_packages': len(validation_results),
+                'template_packages': sum(1 for r in validation_results if r['is_template']),
+                'valid_packages': sum(1 for r in validation_results if r['status'] == 'pass'),
+                'invalid_packages': sum(1 for r in validation_results if r['status'] == 'fail')
+            }, f, indent=2)
+        
+        # Print summary
+        print(f'Package validation completed:')
+        print(f'- Total packages: {len(validation_results)}')
+        print(f'- Template packages: {sum(1 for r in validation_results if r[\"is_template\"])}')
+        print(f'- Valid packages: {sum(1 for r in validation_results if r[\"status\"] == \"pass\")}')
+        print(f'- Invalid packages: {sum(1 for r in validation_results if r[\"status\"] == \"fail\")}')
+        print(f'- Auto-updateable apps: {len(auto_updateable_apps)}')
+        print(f'Auto-updateable apps: {auto_updateable_apps}')
+        
+        # Set outputs for GitHub Actions
+        with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+            f.write(f'valid_packages={sum(1 for r in validation_results if r[\"status\"] == \"pass\")}\n')
+            f.write(f'invalid_packages={sum(1 for r in validation_results if r[\"status\"] == \"fail\")}\n')
+            f.write(f'auto_updateable_apps={\" \".join(auto_updateable_apps)}\n')
+        "
+
+    - name: Generate PR comment
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          
+          // Read validation results
+          const results = JSON.parse(fs.readFileSync('validation_results.json', 'utf8'));
+          
+          // Generate markdown report
+          let comment = `# Package Validation Report\n\n`;
+          comment += `**Summary:**\n`;
+          comment += `- Total packages: ${results.total_packages}\n`;
+          comment += `- Valid packages: ${results.valid_packages}\n`;
+          comment += `- Invalid packages: ${results.invalid_packages}\n`;
+          comment += `- Template packages: ${results.template_packages}\n`;
+          comment += `- Auto-updateable apps: ${results.auto_updateable_apps.length}\n\n`;
+          
+          comment += `**Auto-updateable Applications:**\n`;
+          if (results.auto_updateable_apps.length > 0) {
+            results.auto_updateable_apps.forEach(app => {
+              comment += `- ${app}\n`;
+            });
+          } else {
+            comment += `- None detected\n`;
+          }
+          comment += `\n`;
+          
+          comment += `**Detailed Results:**\n`;
+          comment += `| Package | Status | Issues |\n`;
+          comment += `|---------|--------|-------|\n`;
+          
+          results.validation_results.forEach(result => {
+            const issues = result.message || 'None';
+            comment += `| ${result.package} | ${result.status} | ${issues} |\n`;
+          });
+          
+          // Post comment to PR
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+
+    - name: Upload validation report
+      uses: actions/upload-artifact@v3
+      with:
+        name: validation-report
+        path: validation_results.json
+
+    - name: Upload auto-updateable apps list
+      uses: actions/upload-artifact@v3
+      with:
+        name: auto-updateable-apps
+        path: |
+          validation_results.json
+
+    - name: Fail on validation errors
+      if: steps.validate.outcome == 'failure'
+      run: |
+        echo "Package validation failed!"
+        exit 1

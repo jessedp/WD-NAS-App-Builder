@@ -1,0 +1,167 @@
+name: Check Tailscale Version
+
+on:
+  schedule:
+    # Run daily at 8 AM UTC
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+    inputs:
+      force_check:
+        description: 'Force check for new version even if one exists'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  check-tailscale-version:
+    runs-on: ubuntu-latest
+    name: Check Tailscale Version
+    
+    outputs:
+      new_version: ${{ steps.compare.outputs.new_version }}
+      version_changed: ${{ steps.compare.outputs.version_changed }}
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Fetch latest Tailscale version
+      id: fetch_latest
+      run: |
+        echo "Fetching latest Tailscale version from changelog..."
+        
+        # Fetch the changelog XML
+        curl -s "https://tailscale.com/changelog/index.xml" > tailscale_changelog.xml
+        
+        if [ ! -f tailscale_changelog.xml ]; then
+          echo "ERROR: Failed to fetch Tailscale changelog"
+          exit 1
+        fi
+        
+        # Extract version from the latest entry
+        # Look for the first <item> with a version pattern
+        LATEST_VERSION=$(grep -oP '<title>Tailscale \K[0-9]+\.[0-9]+\.[0-9]+' tailscale_changelog.xml | head -1)
+        
+        if [ -z "$LATEST_VERSION" ]; then
+          echo "ERROR: Could not extract version from changelog"
+          cat tailscale_changelog.xml
+          exit 1
+        fi
+        
+        echo "Latest Tailscale version found: $LATEST_VERSION"
+        echo "latest_version=$LATEST_VERSION" >> $GITHUB_OUTPUT
+
+    - name: Get latest GitHub release for Tailscale
+      id: get_release
+      uses: actions/github-script@v6
+      with:
+        script: |
+          // Get all releases and find the latest Tailscale release
+          const { owner, repo } = context.repo;
+          
+          const releases = await github.rest.repos.listReleases({
+            owner: owner,
+            repo: repo,
+            per_page: 100
+          });
+          
+          // Find the latest release tagged as tailscale-v*
+          const tailscaleReleases = releases.data.filter(release => 
+            release.tag_name && release.tag_name.match(/^tailscale-v[0-9]+\.[0-9]+\.[0-9]+$/)
+          );
+          
+          if (tailscaleReleases.length === 0) {
+            console.log('No existing Tailscale releases found');
+            return null;
+          }
+          
+          // Sort by tag name (semantic version)
+          tailscaleReleases.sort((a, b) => {
+            const versionA = a.tag_name.replace('tailscale-v', '');
+            const versionB = b.tag_name.replace('tailscale-v', '');
+            const partsA = versionA.split('.').map(Number);
+            const partsB = versionB.split('.').map(Number);
+            
+            for (let i = 0; i < Math.max(partsA.length, partsB.length); i++) {
+              const partA = partsA[i] || 0;
+              const partB = partsB[i] || 0;
+              if (partA !== partB) {
+                return partB - partA; // Return highest version first
+              }
+            }
+            return 0;
+          });
+          
+          const latestRelease = tailscaleReleases[0];
+          console.log(`Latest Tailscale release: ${latestRelease.tag_name} (${latestRelease.name})`);
+          
+          // Extract version number from tag
+          const version = latestRelease.tag_name.replace('tailscale-v', '');
+          core.setOutput('current_version', version);
+          core.setOutput('release_tag', latestRelease.tag_name);
+          core.setOutput('release_id', latestRelease.id.toString());
+
+    - name: Compare versions
+      id: compare
+      run: |
+        LATEST_VERSION="${{ steps.fetch_latest.outputs.latest_version }}"
+        CURRENT_VERSION="${{ steps.get_release.outputs.current_version }}"
+        
+        echo "Latest version from changelog: $LATEST_VERSION"
+        echo "Current version in releases: $CURRENT_VERSION"
+        
+        # Function to compare versions
+        version_compare() {
+          echo "$1" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'
+        }
+        
+        LATEST_NUM=$(version_compare "$LATEST_VERSION")
+        CURRENT_NUM=$(version_compare "$CURRENT_VERSION")
+        
+        echo "Latest version number: $LATEST_NUM"
+        echo "Current version number: $CURRENT_NUM"
+        
+        if [ -z "$CURRENT_VERSION" ] || [ "$LATEST_NUM" -gt "$CURRENT_NUM" ]; then
+          echo "✅ New version detected: $LATEST_VERSION"
+          echo "version_changed=true" >> $GITHUB_OUTPUT
+          echo "new_version=$LATEST_VERSION" >> $GITHUB_OUTPUT
+        else
+          echo "✅ No new version. Latest: $LATEST_VERSION, Current: $CURRENT_VERSION"
+          echo "version_changed=false" >> $GITHUB_OUTPUT
+          echo "new_version=" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Trigger build workflow if new version
+      if: steps.compare.outputs.version_changed == 'true' || github.event.inputs.force_check == 'true'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const { owner, repo } = context.repo;
+          const newVersion = '${{ steps.compare.outputs.new_version }}';
+          
+          console.log(`Triggering build workflow for Tailscale ${newVersion}`);
+          
+          // Trigger the build-and-release workflow
+          await github.rest.actions.createWorkflowDispatch({
+            owner: owner,
+            repo: repo,
+            workflow_id: 'build-and-release.yml',
+            ref: 'main',
+            inputs: {
+              package: 'tailscale',
+              new_version: newVersion,
+              changelog_url: 'https://tailscale.com/changelog/index.xml'
+            }
+          });
+
+    - name: Report status
+      run: |
+        if [ "${{ steps.compare.outputs.version_changed }}" == "true" ] || [ "${{ github.event.inputs.force_check }}" == "true" ]; then
+          echo "🚀 New Tailscale version detected: ${{ steps.compare.outputs.new_version }}"
+          echo "✅ Build workflow triggered successfully"
+        else
+          echo "✅ No new Tailscale version found"
+          echo "📊 Latest: ${{ steps.fetch_latest.outputs.latest_version }} | Current: ${{ steps.get_release.outputs.current_version }}"
+        fi

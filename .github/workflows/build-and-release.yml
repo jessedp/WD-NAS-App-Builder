@@ -1,0 +1,321 @@
+name: Build and Release
+
+on:
+  workflow_call:
+    inputs:
+      package:
+        description: 'Package name to build'
+        required: true
+        type: string
+      new_version:
+        description: 'New version to build'
+        required: true
+        type: string
+      changelog:
+        description: 'Changelog for the release'
+        required: false
+        type: string
+        default: 'Changelog not available'
+      changelog_url:
+        description: 'URL to fetch changelog from (for Tailscale)'
+        required: false
+        type: string
+        default: ''
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'Package name to build'
+        required: true
+        type: string
+        default: 'tailscale'
+      new_version:
+        description: 'New version to build'
+        required: true
+        type: string
+      changelog:
+        description: 'Changelog for the release'
+        required: false
+        type: string
+        default: 'Changelog not available'
+      changelog_url:
+        description: 'URL to fetch changelog from (for Tailscale)'
+        required: false
+        type: string
+        default: ''
+
+jobs:
+  validate-and-build:
+    runs-on: ubuntu-latest
+    name: Build and Release ${{ inputs.package }} v${{ inputs.new_version }}
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Validate package exists
+      run: |
+        if [ ! -d "apps/${{ inputs.package }}" ]; then
+          echo "ERROR: Package '${{ inputs.package }}' not found in apps/ directory"
+          exit 1
+        fi
+        echo "✅ Package '${{ inputs.package }}' found"
+
+    - name: Validate package is auto-updateable
+      run: |
+        # Run the validation logic to check if package is auto-updateable
+        python3 -c "
+        import json
+        from pathlib import Path
+        
+        def read_apkg_rc(package_path):
+            '''Read and parse apkg.rc file'''
+            apkg_path = package_path / 'apkg.rc'
+            if not apkg_path.exists():
+                return None
+            
+            data = {}
+            with open(apkg_path, 'r') as f:
+                for line in f:
+                    line = line.strip()
+                    if ':' in line and not line.startswith('#'):
+                        key, value = line.split(':', 1)
+                        data[key.strip()] = value.strip()
+            return data
+        
+        def read_template_rc():
+            '''Read template apkg.rc for comparison'''
+            template_path = Path('apps/template/apkg.rc')
+            return read_apkg_rc(template_path)
+        
+        # Read template for comparison
+        template_data = read_template_rc()
+        if not template_data:
+            print('ERROR: Could not read template apkg.rc')
+            exit(1)
+        
+        # Check target package
+        package_path = Path('apps/${{ inputs.package }}')
+        apkg_data = read_apkg_rc(package_path)
+        
+        if not apkg_data:
+            print('ERROR: Could not read package apkg.rc')
+            exit(1)
+        
+        # Check for template defaults
+        issues = []
+        is_template = False
+        
+        # Check Package name
+        if apkg_data.get('Package', '').lower() in ['template', '']:
+            issues.append('Package name is template default or empty')
+            is_template = True
+        
+        # Check Version
+        version = apkg_data.get('Version', '')
+        if version in ['0.0.1', ''] or version == template_data.get('Version', ''):
+            issues.append('Version is template default or empty')
+            is_template = True
+        
+        # Check Description
+        description = apkg_data.get('Description', '')
+        template_desc = template_data.get('Description', '')
+        if description == template_desc or description.lower() in ['a blank template app from which to begin development of new apps.', '']:
+            issues.append('Description is template default or empty')
+            is_template = True
+        
+        # Check Icon
+        icon_name = apkg_data.get('Icon', '')
+        if icon_name in ['logo.svg', ''] or icon_name == template_data.get('Icon', ''):
+            issues.append('Icon is template default or empty')
+            is_template = True
+        
+        if is_template:
+            print('ERROR: Package is based on template and cannot be auto-updated')
+            print('Issues found:')
+            for issue in issues:
+                print(f'  - {issue}')
+            exit(1)
+        
+        print('✅ Package passes auto-update validation')
+        "
+
+    - name: Update version in package files
+      run: |
+        PACKAGE="${{ inputs.package }}"
+        NEW_VERSION="${{ inputs.new_version }}"
+        
+        echo "Updating version to $NEW_VERSION for package $PACKAGE"
+        
+        # Update apkg.rc
+        case "$PACKAGE" in
+          tailscale)
+            sed -i "s/Version:.*/Version:\t\t\t${NEW_VERSION}/" "apps/${PACKAGE}/apkg.rc"
+            ;;
+          syncthing)
+            # For Syncthing, we need to add 'v' prefix for the build script
+            sed -i "s/Version:.*/Version:\t\t\t${NEW_VERSION}/" "apps/${PACKAGE}/apkg.rc"
+            ;;
+          *)
+            sed -i "s/Version:.*/Version:\t\t\t${NEW_VERSION}/" "apps/${PACKAGE}/apkg.rc"
+            ;;
+        esac
+        
+        echo "✅ Updated apkg.rc"
+
+    - name: Setup Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build package using wd_builder Docker image
+      env:
+        PACKAGE: ${{ inputs.package }}
+        NEW_VERSION: ${{ inputs.new_version }}
+      run: |
+        echo "Building package: $PACKAGE version: $NEW_VERSION"
+        
+        # Build the wd_builder Docker image if it doesn't exist
+        if [[ "$(docker images -q wd_builder:latest 2> /dev/null)" == "" ]]; then
+          echo "Building wd_builder Docker image..."
+          docker build -f docker/build.Dockerfile -t wd_builder .
+        fi
+        
+        # Create packages directory
+        mkdir -p packages
+        
+        # Run build in Docker container
+        docker run --rm \
+          -v $(pwd):/data \
+          -e PACKAGE=${PACKAGE} \
+          -e NEW_VERSION=${NEW_VERSION} \
+          wd_builder:latest /bin/bash -c "
+          set -e
+          cd /data
+          
+          # Set version environment variables based on package
+          case '$PACKAGE' in
+            tailscale)
+              export TAILSCALE_VERSION='$NEW_VERSION'
+              echo \"Building Tailscale version: \$TAILSCALE_VERSION\"
+              ;;
+            syncthing)
+              export ST_VERSION='v$NEW_VERSION'
+              echo \"Building Syncthing version: \$ST_VERSION\"
+              ;;
+          esac
+          
+          # Make scripts executable
+          find -type f -name '*.sh' -exec chmod +x {} +
+          find -type f -name '*.rc' -exec chmod +x {} +
+          
+          # Run package build
+          cd /data/apps/\${PACKAGE}
+          ./build.sh
+          
+          # Set ownership (GitHub Actions runs as root)
+          chown -R 1000:1000 /data/packages/
+          
+          echo \"Build completed successfully\"
+          "
+
+    - name: List generated packages
+      run: |
+        echo "Generated packages:"
+        find packages -name "*.bin" -type f | sort
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: packages-${{ inputs.package }}-${{ inputs.new_version }}
+        path: packages/
+        retention-days: 30
+
+    - name: Get changelog
+      id: get_changelog
+      run: |
+        if [ -n "${{ inputs.changelog }}" ] && [ "${{ inputs.changelog }}" != "Changelog not available" ]; then
+          echo "Using provided changelog"
+          echo "changelog=${{ inputs.changelog }}" >> $GITHUB_OUTPUT
+        elif [ -n "${{ inputs.changelog_url }}" ]; then
+          echo "Fetching changelog from URL: ${{ inputs.changelog_url }}"
+          # For Tailscale XML changelog
+          if [[ "${{ inputs.changelog_url }}" == *"tailscale.com"* ]]; then
+            curl -s "${{ inputs.changelog_url }}" > changelog.xml
+            # Extract relevant changelog entries (simplified)
+            CHANGELOG=$(grep -oP '<title>Tailscale \K[0-9]+\.[0-9]+\.[0-9]+.*?(?=</title>)' changelog.xml | head -5 | sed 's/<[^>]*>//g' | tr '\n' ' ')
+            echo "changelog=$CHANGELOG" >> $GITHUB_OUTPUT
+          else
+            echo "changelog=Changelog fetched from external source" >> $GITHUB_OUTPUT
+          fi
+        else
+          echo "changelog=Changelog not available" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Create GitHub Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ inputs.package }}-v${{ inputs.new_version }}
+        release_name: ${{ inputs.package }} v${{ inputs.new_version }}
+        body: |
+          ## Changes in version ${{ inputs.new_version }}
+          
+          ${{ steps.get_changelog.outputs.changelog }}
+          
+          ## Build Information
+          
+          - **Package:** ${{ inputs.package }}
+          - **Version:** ${{ inputs.new_version }}
+          - **Build Date:** $(date -u)
+          - **Platforms:** AMD64, ARM
+          
+          ## Installation
+          
+          Download the appropriate .bin file for your WD MyCloud device and install using the WD dashboard.
+        draft: false
+        prerelease: false
+
+    - name: Upload release assets
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: packages/
+        asset_name: ${{ inputs.package }}-${{ inputs.new_version }}-packages.zip
+        asset_content_type: application/zip
+
+    - name: Create packages zip
+      run: |
+        cd packages
+        zip -r "../${{ inputs.package }}-${{ inputs.new_version }}-packages.zip" .
+        cd ..
+
+    - name: Upload packages zip to release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ${{ inputs.package }}-${{ inputs.new_version }}-packages.zip
+        asset_content_type: application/zip
+
+    - name: Summary
+      run: |
+        echo "## 🎉 Build and Release Completed"
+        echo ""
+        echo "**Package:** ${{ inputs.package }}"
+        echo "**Version:** ${{ inputs.new_version }}"
+        echo "**Release Tag:** ${{ inputs.package }}-v${{ inputs.new_version }}"
+        echo ""
+        echo "### Generated Files:"
+        find packages -name "*.bin" -type f | while read file; do
+          echo "- $(basename "$file")"
+        done
+        echo ""
+        echo "### Release Created:"
+        echo "- GitHub Release: ${{ steps.create_release.outputs.html_url }}"
+        echo "- Assets uploaded successfully"
+        echo ""
+        echo "✅ All build artifacts have been generated and uploaded to the release."
