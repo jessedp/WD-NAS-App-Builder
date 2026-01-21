@@ -71,8 +71,8 @@ PROFILE_PATH="/etc/profile";	# Profile path
 
 # Architecture determination
 HARDWARE_MODEL="$(cat /usr/local/modules/files/model)";
-HARDWARE_KERNEL_ARCH="$(uname -m)";	# x86_64 / armv7l
-HARDWARE_DEBIAN_ARCH="";			# amd64  / armhf
+HARDWARE_KERNEL_ARCH="$(uname -m)";	# x86_64 / armv7l / aarch64
+HARDWARE_DEBIAN_ARCH="";			# amd64  / armhf / arm64
 
 if [ "${HARDWARE_MODEL}" == "MyCloudPR4100" ] || [ "${HARDWARE_MODEL}" == "WDMyCloudPR4100" ]; then
 	HARDWARE_DEBIAN_ARCH="amd64";
@@ -102,6 +102,8 @@ if [ "${HARDWARE_DEBIAN_ARCH}" == "amd64" ]; then
 	HARDWARE_TOOLCHAIN="x86_64-linux-gnu";
 elif [ "${HARDWARE_DEBIAN_ARCH}" == "armhf" ]; then
 	HARDWARE_TOOLCHAIN="arm-linux-gnueabihf";
+elif [ "${HARDWARE_DEBIAN_ARCH}" == "arm64" ]; then
+	HARDWARE_TOOLCHAIN="aarch64-linux-gnu";
 fi;
 
 # HDD references

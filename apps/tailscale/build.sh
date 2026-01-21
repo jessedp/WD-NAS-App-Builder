@@ -6,7 +6,8 @@ TAILSCALE_VERSION="1.92.5"
 # Some models use AMD64 architecture and others use ARM
 declare -A MODELS
 MODELS[amd64]="MyCloudPR4100 MyCloudPR2100 WDMyCloudDL4100 WDMyCloudDL2100"
-# MODELS[armhf]="WDCloud WDMyCloud WDMyCloudMirror WDMyCloudEX4100 WDMyCloudEX2100 MyCloudEX2Ultra"
+MODELS[armhf]="WDCloud WDMyCloud WDMyCloudMirror WDMyCloudMirrorG2 WDMyCloudEX4100 WDMyCloudEX2100 MyCloudEX2Ultra"
+# MODELS[arm64]="" # Add arm64 models here when identified
 
 for ARCH in "${!MODELS[@]}"; do
 	# 1. Download and extract binary for this ARCH

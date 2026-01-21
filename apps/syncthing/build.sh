@@ -9,9 +9,9 @@ sed -i "s/Version:.*/Version:\t\t\t${ST_VERSION#v}/" apkg.rc
 
 # Some models use AMD64 architecture and others use ARM
 declare -A MODELS
-MODELS[amd64]="MyCloudPR4100"
-# MODELS[amd64]="MyCloudPR4100 MyCloudPR2100 WDMyCloudDL4100 WDMyCloudDL2100"
-# MODELS[armhf]="WDCloud WDMyCloud WDMyCloudMirror WDMyCloudEX4100 WDMyCloudEX2100 MyCloudEX2Ultra"
+MODELS[amd64]="MyCloudPR4100 MyCloudPR2100 WDMyCloudDL4100 WDMyCloudDL2100"
+MODELS[armhf]="WDCloud WDMyCloud WDMyCloudMirror WDMyCloudMirrorG2 WDMyCloudEX4100 WDMyCloudEX2100 MyCloudEX2Ultra"
+# MODELS[arm64]="" # Add arm64 models here when identified
 
 for ARCH in "${!MODELS[@]}"; do
 	# Build the archive for all models of this architecture
@@ -22,6 +22,8 @@ for ARCH in "${!MODELS[@]}"; do
     elif [ "$ARCH" == "armhf" ]; then
         # Using linux-arm (ARMv5) for broad compatibility on armhf devices
         ST_ARCH="arm"
+    elif [ "$ARCH" == "arm64" ]; then
+        ST_ARCH="arm64"
     fi
 
     FILENAME="syncthing-linux-${ST_ARCH}-${ST_VERSION}.tar.gz"
