@@ -255,6 +255,8 @@ jobs:
             fi
           else
             invalid_packages=$((invalid_packages + 1))
+            # Create GitHub Annotation for the failure
+            echo "::error file=$apkg_rc,line=1,title=Validation Failed for $app_name::$message"
           fi
 
           obj="{\"package\":\"$(json_escape "$app_name")\",\"status\":\"$(json_escape "$status")\",\"message\":\"$(json_escape "$message")\",\"is_template\":$is_template,\"version\":\"$(json_escape "${version:-}")\",\"description\":\"$(json_escape "${description:-}")\"}"
@@ -309,6 +311,35 @@ jobs:
           echo "invalid_packages=$invalid_packages"
           echo "auto_updateable_apps=$auto_updateable_apps_str"
         } >> "$GITHUB_OUTPUT"
+
+    - name: Generate Job Summary
+      if: always()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          if (!fs.existsSync('validation_results.json')) return;
+          
+          const results = JSON.parse(fs.readFileSync('validation_results.json', 'utf8'));
+          
+          let summary = `### 📦 Package Validation Report\n\n`;
+          summary += `| Metric | Count |\n`;
+          summary += `|--------|-------|\n`;
+          summary += `| Total Packages | ${results.total_packages} |\n`;
+          summary += `| ✅ Valid | ${results.valid_packages} |\n`;
+          summary += `| ❌ Invalid | ${results.invalid_packages} |\n`;
+          summary += `| 📝 Template-based | ${results.template_packages} |\n\n`;
+          
+          summary += `#### Detailed Results\n\n`;
+          summary += `| Package | Status | Issues |\n`;
+          summary += `|---------|--------|--------|\n`;
+          
+          results.validation_results.forEach(res => {
+            const statusIcon = res.status === 'pass' ? '✅' : '❌';
+            summary += `| ${res.package} | ${statusIcon} ${res.status} | ${res.message || '-'} |\n`;
+          });
+          
+          core.summary.addRaw(summary).write();
 
     - name: Generate PR comment
       if: github.event_name == 'pull_request'
