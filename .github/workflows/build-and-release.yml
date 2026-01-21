@@ -47,6 +47,8 @@ jobs:
   validate-and-build:
     runs-on: ubuntu-latest
     name: Build and Release ${{ inputs.package }} v${{ inputs.new_version }}
+    permissions:
+      contents: write
     
     steps:
     - name: Checkout repository
@@ -230,6 +232,10 @@ jobs:
         path: packages/
         retention-days: 30
 
+    - name: Get current date
+      id: date
+      run: echo "date=$(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_OUTPUT
+
     - name: Get changelog
       id: get_changelog
       run: |
@@ -266,7 +272,7 @@ jobs:
           
           - **Package:** ${{ inputs.package }}
           - **Version:** ${{ inputs.new_version }}
-          - **Build Date:** $(date -u)
+          - **Build Date:** ${{ steps.date.outputs.date }}
           - **Platforms:** AMD64, ARM
           
           ## Installation
