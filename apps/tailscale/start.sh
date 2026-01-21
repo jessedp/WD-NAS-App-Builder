@@ -3,16 +3,13 @@
 
 log "Starting Tailscale..."
 
-# Create persistent state directory if it doesn't exist
-if [ ! -d "${APP_PATH}/var_lib_tailscale" ]; then
-    log "Creating persistent state directory"
-    mkdir -p "${APP_PATH}/var_lib_tailscale"
-fi
+# Persistent state directory
+CONFIG_DIR="${APPS_PATH}/tailscale_conf"
 
 # Link /var/lib/tailscale to persistence
 # We force the link creation to ensure it points to the right place
 rm -rf /var/lib/tailscale
-ln -sf "${APP_PATH}/var_lib_tailscale" /var/lib/tailscale
+ln -sf "${CONFIG_DIR}" /var/lib/tailscale
 
 # Start tailscaled
 log "Starting tailscaled daemon"

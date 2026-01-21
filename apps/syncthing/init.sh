@@ -26,5 +26,12 @@
 log "creating web path: ${APP_WEB_PATH}"
 mkdir -p ${APP_WEB_PATH}
 
+# Create persistent configuration directory
+CONFIG_DIR="${APPS_PATH}/syncthing_conf"
+if [ ! -d "${CONFIG_DIR}" ]; then
+    log "Creating persistent configuration directory: ${CONFIG_DIR}"
+    mkdir -p "${CONFIG_DIR}"
+fi
+
 log "linking redirect page from: ${APP_PATH}/web/* to: ${APP_WEB_PATH}"
 ln -sf ${APP_PATH}/web/* ${APP_WEB_PATH} >> ${LOG} 2>&1

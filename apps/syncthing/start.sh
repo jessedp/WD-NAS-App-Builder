@@ -27,14 +27,9 @@
 
 ST_BIN="${APP_PATH}/syncthing"
 PID_FILE="/var/run/${APP_NAME}.pid"
-CONFIG_DIR="${APP_PERSISTENT_DATA_PATH}"
+CONFIG_DIR="${APPS_PATH}/syncthing_conf"
 
 log "starting syncthing..."
-
-if [ ! -d "${CONFIG_DIR}" ]; then
-    log "Creating config dir: ${CONFIG_DIR}"
-    mkdir -p "${CONFIG_DIR}"
-fi
 
 # Debug: Print version to main log
 log "Checking binary version..."
