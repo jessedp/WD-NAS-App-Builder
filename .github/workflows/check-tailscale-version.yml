@@ -29,11 +29,13 @@ jobs:
 
     - name: Fetch latest Tailscale version from GitHub
       id: fetch_latest
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         echo "Fetching latest Tailscale version from GitHub API..."
         
         # Get latest release from tailscale/tailscale
-        RESPONSE=$(curl -s "https://api.github.com/repos/tailscale/tailscale/releases/latest")
+        RESPONSE=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" "https://api.github.com/repos/tailscale/tailscale/releases/latest")
         
         if [ -z "$RESPONSE" ]; then
           echo "ERROR: Failed to fetch Tailscale releases"
@@ -140,12 +142,14 @@ jobs:
     - name: Get release changelog
       if: steps.compare.outputs.version_changed == 'true' || github.event.inputs.force_check == 'true'
       id: get_changelog
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         if [ "${{ steps.compare.outputs.version_changed }}" == "true" ] || [ "${{ github.event.inputs.force_check }}" == "true" ]; then
           echo "Fetching changelog for version ${{ steps.fetch_latest.outputs.tag_version }}"
           
           # Get release details from GitHub API
-          RESPONSE=$(curl -s "https://api.github.com/repos/tailscale/tailscale/releases/tags/${{ steps.fetch_latest.outputs.tag_version }}")
+          RESPONSE=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" "https://api.github.com/repos/tailscale/tailscale/releases/tags/${{ steps.fetch_latest.outputs.tag_version }}")
           
           if [ -z "$RESPONSE" ]; then
             echo "WARNING: Could not fetch changelog"
