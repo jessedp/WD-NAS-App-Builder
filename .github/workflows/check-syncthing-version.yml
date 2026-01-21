@@ -166,7 +166,7 @@ jobs:
         script: |
           const { owner, repo } = context.repo;
           const newVersion = '${{ steps.compare.outputs.new_version }}';
-          const changelog = JSON.parse('${{ steps.get_changelog.outputs.changelog }}');
+          const changelog = ${{ steps.get_changelog.outputs.changelog }};
           
           console.log(`Triggering build workflow for Syncthing ${newVersion}`);
           
