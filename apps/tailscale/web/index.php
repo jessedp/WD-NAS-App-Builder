@@ -1,3 +1,22 @@
+<?php
+session_start();
+if (!isset($_SESSION['username'])) {
+    header('Content-Type: text/html; charset=utf-8');
+    echo '<!DOCTYPE html>
+<html>
+<head>
+    <title>Tailscale - Login Required</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 40px; text-align: center; color: #212529; }
+    </style>
+</head>
+<body>
+    <h2>Please login to the NAS to continue</h2>
+</body>
+</html>';
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html>
 <head>
