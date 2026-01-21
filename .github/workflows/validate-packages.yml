@@ -136,10 +136,6 @@ jobs:
           echo "Valid icon"
         }
 
-        # Auto-updateable packages - explicitly defined list
-        # These packages have proper implementation for automated version updates
-        AUTO_UPDATEABLE_PACKAGES=("tailscale" "syncthing")
-
         template_package="$(get_rc_value "$TEMPLATE_RC" Package)"
         template_version="$(get_rc_value "$TEMPLATE_RC" Version)"
         template_description="$(get_rc_value "$TEMPLATE_RC" Description)"
