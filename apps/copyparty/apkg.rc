@@ -7,8 +7,8 @@ Description:		Portable file server with accelerated resumable uploads, dedup, We
 Icon:				logo.png
 AddonShowName:		copyparty
 AddonIndexPage:		index.php
-AddonUsedPort:		3923
-AddonDefaultPort:	3923
+AddonUsedPort:
+AddonDefaultPort:
 AddonDefaultGroup:
 AddonDefaultUser:
 InstDepend:
