@@ -21,9 +21,9 @@ If you don't have docker installed, see the [guide](docker/README.md) in the `do
 ## Existing Apps
 
 Being Regularly Updated:
-- [Syncthing 2.0.13](https://github.com/syncthing/syncthing/releases/download/v2.0.13/syncthing-linux-amd64-v2.0.13.tar.gz) ([docs](docs/apps/syncthing/README.md))
-- [Tailscale 1.92.5](https://pkgs.tailscale.com/stable/tailscale_1.92.5_amd64.tgz) ([docs](docs/apps/tailscale/README.md))
-- [copyparty 1.20.3](https://github.com/9001/copyparty/releases/latest/download/copyparty-sfx.py) ([docs](docs/apps/copyparty/README.md))
+- [Syncthing](https://syncthing.net/) ([latest release](https://github.com/jessedp/WD-NAS-App-Builder/releases/tag/latest-syncthing)) ([docs](docs/apps/syncthing/README.md))
+- [Tailscale](https://tailscale.com/) ([latest release](https://github.com/jessedp/WD-NAS-App-Builder/releases/tag/latest-tailscale)) ([docs](docs/apps/tailscale/README.md))
+- [copyparty](https://github.com/9001/copyparty) ([latest release](https://github.com/jessedp/WD-NAS-App-Builder/releases/tag/latest-copyparty)) ([docs](docs/apps/copyparty/README.md))
 
 
 Untested app configurations probably work (mostly) fine, but are not yet up-to-date or automatically updated:
