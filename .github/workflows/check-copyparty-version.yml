@@ -49,6 +49,9 @@ jobs:
           echo "ERROR: Could not extract version from GitHub API response"
           exit 1
         fi
+
+        # Extract html_url
+        RELEASE_URL=$(echo "$RESPONSE" | grep -oP '"html_url":\s*"\K[^"]+' | head -1)
         
         # Remove 'v' prefix if present for numerical comparison
         VERSION_NUM=${LATEST_VERSION#v}
@@ -56,6 +59,7 @@ jobs:
         echo "Latest copyparty version found: $LATEST_VERSION"
         echo "latest_version=$LATEST_VERSION" >> $GITHUB_OUTPUT
         echo "version_num=$VERSION_NUM" >> $GITHUB_OUTPUT
+        echo "release_url=$RELEASE_URL" >> $GITHUB_OUTPUT
 
     - name: Get latest GitHub release for copyparty in this repo
       id: get_release
@@ -113,6 +117,7 @@ jobs:
             inputs: {
               package: 'copyparty',
               new_version: newVersion,
-              changelog: 'Automatically detected new version from upstream'
+              changelog: 'Automatically detected new version from upstream',
+              changelog_url: '${{ steps.fetch_latest.outputs.release_url }}'
             }
           });

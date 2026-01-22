@@ -247,16 +247,8 @@ jobs:
           echo "Using provided changelog"
           echo "changelog=${{ inputs.changelog }}" >> $GITHUB_OUTPUT
         elif [ -n "${{ inputs.changelog_url }}" ]; then
-          echo "Fetching changelog from URL: ${{ inputs.changelog_url }}"
-          # For Tailscale XML changelog
-          if [[ "${{ inputs.changelog_url }}" == *"tailscale.com"* ]]; then
-            curl -s "${{ inputs.changelog_url }}" > changelog.xml
-            # Extract relevant changelog entries (simplified)
-            CHANGELOG=$(grep -oP '<title>Tailscale \K[0-9]+\.[0-9]+\.[0-9]+.*?(?=</title>)' changelog.xml | head -5 | sed 's/<[^>]*>//g' | tr '\n' ' ')
-            echo "changelog=$CHANGELOG" >> $GITHUB_OUTPUT
-          else
-            echo "changelog=Changelog fetched from external source" >> $GITHUB_OUTPUT
-          fi
+          echo "Using changelog URL"
+          echo "changelog=Please refer to the changelog available at ${{ inputs.changelog_url }}" >> $GITHUB_OUTPUT
         else
           echo "changelog=Changelog not available" >> $GITHUB_OUTPUT
         fi

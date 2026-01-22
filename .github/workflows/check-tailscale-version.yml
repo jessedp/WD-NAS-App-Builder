@@ -50,6 +50,9 @@ jobs:
           echo "Response: $RESPONSE"
           exit 1
         fi
+
+        # Extract html_url
+        RELEASE_URL=$(echo "$RESPONSE" | grep -oP '"html_url":\s*"\K[^"]+' | head -1)
         
         # Remove 'v' prefix if present
         LATEST_VERSION=${LATEST_VERSION#v}
@@ -58,6 +61,7 @@ jobs:
         echo "latest_version=$LATEST_VERSION" >> $GITHUB_OUTPUT
         echo "raw_version=$LATEST_VERSION" >> $GITHUB_OUTPUT
         echo "tag_version=v$LATEST_VERSION" >> $GITHUB_OUTPUT
+        echo "release_url=$RELEASE_URL" >> $GITHUB_OUTPUT
 
     - name: Get latest GitHub release for Tailscale
       id: get_release
@@ -183,7 +187,8 @@ jobs:
             inputs: {
               package: 'tailscale',
               new_version: newVersion,
-              changelog: changelog || 'Changelog not available'
+              changelog: changelog || 'Changelog not available',
+              changelog_url: '${{ steps.fetch_latest.outputs.release_url }}'
             }
           });
 
