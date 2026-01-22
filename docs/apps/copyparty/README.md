@@ -16,6 +16,15 @@ Clicking the **Configure** button will open the typical copyparty interface
 - **Default Login**: `admin / admin` (configured in `copyparty.conf`).
 - **Persistence**: Configuration is stored in `copyparty_conf/` on the application volume.
 
+## Recovery
+In case you edit the config file and break restarting the server, there's a recovery dashboard:
+![recovery dashboard for copyparty config](images/copyparty_recovery_logged_in.png)
+
+For security, the dashboard will not function if the NAS admin user is not logged in.
+![recovery dashboard for copyparty disabled](images/copyparty_recovery_logged_out.png)
+
+
+
 
 ## Shared Folders
 By default, the app shares `/mnt/HD/HD_a2` (the main data volume) at the root.
