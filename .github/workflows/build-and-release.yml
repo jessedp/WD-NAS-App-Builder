@@ -302,9 +302,7 @@ jobs:
         # Construct notes
         NOTES="Rolling release for **${PACKAGE} v${VERSION}**."
         if [ -n "$CHANGELOG_URL" ]; then
-           NOTES="${NOTES}
-
-[Full Changelog](${CHANGELOG_URL})"
+           NOTES=$(printf "%s\n\n[Full Changelog](%s)" "$NOTES" "$CHANGELOG_URL")
         fi
         
         # Create new rolling release
