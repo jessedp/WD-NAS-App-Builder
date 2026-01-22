@@ -21,6 +21,18 @@ $tailscale_bin = realpath(__DIR__ . '/../tailscale');
 $web_port = 8282;
 $keepalive_file = '/tmp/tailscale-web.keepalive';
 
+// Handle Status Polling
+if (isset($_GET['status'])) {
+    header('Content-Type: application/json');
+    $status_output = shell_exec($tailscale_bin . ' status 2>&1');
+    $auth_url = null;
+    if (preg_match('/https:\/\/login\.tailscale\.com\/a\/[a-zA-Z0-9]+/', $status_output, $matches)) {
+        $auth_url = $matches[0];
+    }
+    echo json_encode(['auth_url' => $auth_url, 'status' => $status_output]);
+    exit;
+}
+
 // Handle AJAX heartbeat
 if (isset($_GET['heartbeat'])) {
     if (file_exists($keepalive_file)) {
@@ -119,6 +131,29 @@ $ts_ip = trim(shell_exec($tailscale_bin . ' ip --4 2>/dev/null'));
                 });
         }, 60000);
         <?php endif; ?>
+
+        function startLoginPolling() {
+            let attempts = 0;
+            const maxAttempts = 300; // 5 minutes
+            const poll = setInterval(function() {
+                attempts++;
+                if (attempts >= maxAttempts) {
+                    clearInterval(poll);
+                    return;
+                }
+
+                fetch('?status=1')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.auth_url) {
+                            // User logged in!
+                            clearInterval(poll);
+                            $('.auth-card').fadeOut();
+                            setTimeout(() => window.location.reload(), 1000);
+                        }
+                    });
+            }, 1000);
+        }
     </script>
 </head>
 <body>
@@ -196,7 +231,7 @@ $ts_ip = trim(shell_exec($tailscale_bin . ' ip --4 2>/dev/null'));
             <div class="card auth-card">
                 <strong>Authentication Required</strong>
                 <p>Tailscale needs you to log in to add this node:</p>
-                <a href="<?php echo $auth_url; ?>" target="_blank" class="btn btn-primary">
+                <a href="<?php echo $auth_url; ?>" target="_blank" class="btn btn-primary" onclick="startLoginPolling()">
                     Login: <?php echo htmlspecialchars($auth_url); ?>
                 </a>
             </div>
