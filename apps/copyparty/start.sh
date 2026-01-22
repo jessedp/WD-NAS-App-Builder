@@ -6,6 +6,7 @@
 CP_BIN="${APP_PATH}/copyparty-sfx.py"
 CONFIG_FILE="${APPS_PATH}/copyparty_conf/copyparty.conf"
 PID_FILE="/var/run/${APP_NAME}.pid"
+export XDG_CONFIG_HOME="${APPS_PATH}/copyparty_conf/"
 
 log "Starting copyparty..."
 
