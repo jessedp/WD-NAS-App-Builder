@@ -55,6 +55,10 @@ if (isset($_POST['action'])) {
     } elseif ($_POST['action'] === 'stop_web') {
         shell_exec('pkill -f "tailscale web --listen 0.0.0.0:' . $web_port . '"');
         if (file_exists($keepalive_file)) unlink($keepalive_file);
+    } elseif ($_POST['action'] === 'restart_app') {
+        $app_dir = realpath(__DIR__ . '/..');
+        shell_exec("sh " . escapeshellarg($app_dir . '/init.sh') . " restart " . escapeshellarg($app_dir) . " > /dev/null 2>&1 &");
+        sleep(3); // Wait for restart
     }
     header("Location: index.php");
     exit;
@@ -123,7 +127,13 @@ $ts_ip = trim(shell_exec($tailscale_bin . ' ip --4 2>/dev/null'));
             <img src="tailscale.png" class="logo" alt="Tailscale Logo">
             <h1>Tailscale</h1>
         </div>
-        <button class="btn btn-muted" onclick="window.location.reload();">Refresh Status</button>
+        <div>
+            <form method="POST" style="display:inline;">
+                <input type="hidden" name="action" value="restart_app">
+                <button type="submit" class="btn btn-muted" onclick="return confirm('Are you sure you want to restart Tailscale? This will interrupt connections.');">Restart Tailscale</button>
+            </form>
+            <button class="btn btn-muted" onclick="window.location.reload();">Refresh Status</button>
+        </div>
     </header>
 
     <div class="section">
