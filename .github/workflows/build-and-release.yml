@@ -17,7 +17,7 @@ on:
         type: string
         default: 'Changelog not available'
       changelog_url:
-        description: 'URL to fetch changelog from (for Tailscale)'
+        description: 'URL to the changelog or release notes'
         required: false
         type: string
         default: ''
@@ -38,7 +38,7 @@ on:
         type: string
         default: 'Changelog not available'
       changelog_url:
-        description: 'URL to fetch changelog from (for Tailscale)'
+        description: 'URL to the changelog or release notes'
         required: false
         type: string
         default: ''
