@@ -287,31 +287,31 @@ jobs:
       run: |
         PACKAGE="${{ inputs.package }}"
         VERSION="${{ inputs.new_version }}"
+        CHANGELOG_URL="${{ inputs.changelog_url }}"
         TAG="latest-${PACKAGE}"
         
         echo "Updating rolling release '$TAG'..."
         
-        # Prepare latest binaries
-        mkdir -p packages_latest
-        find packages -name "*.bin" -exec cp {} packages_latest/ \;
-        
-        # Rename binaries to use 'latest' instead of version number
-        cd packages_latest
-        for file in *.bin; do
-          if [[ "$file" == *"$VERSION"* ]]; then
-             mv "$file" "${file/$VERSION/latest}"
-          fi
-        done
-        cd ..
+        # Prepare binaries (copy without renaming)
+        mkdir -p packages_rolling
+        find packages -name "*.bin" -exec cp {} packages_rolling/ \;
         
         # Delete existing tag/release if exists
         gh release delete "$TAG" --cleanup-tag -y || true
         
+        # Construct notes
+        NOTES="Rolling release for **${PACKAGE} v${VERSION}**."
+        if [ -n "$CHANGELOG_URL" ]; then
+           NOTES="${NOTES}
+
+[Full Changelog](${CHANGELOG_URL})"
+        fi
+        
         # Create new rolling release
         gh release create "$TAG" \
-          packages_latest/*.bin \
+          packages_rolling/*.bin \
           --title "Latest $PACKAGE" \
-          --notes "Rolling release for the latest version of $PACKAGE. Always contains the most recent build." \
+          --notes "$NOTES" \
           --prerelease
           
         echo "✅ Rolling release updated"
