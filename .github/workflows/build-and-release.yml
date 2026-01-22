@@ -249,9 +249,9 @@ jobs:
         elif [ -n "${{ inputs.changelog_url }}" ]; then
           echo "Using changelog URL"
           echo "changelog=Please refer to the changelog available at ${{ inputs.changelog_url }}" >> $GITHUB_OUTPUT
-        else
-          echo "changelog=Changelog not available" >> $GITHUB_OUTPUT
-        fi
+          else
+            echo "changelog=See full changelog at: ${{ inputs.changelog_url }}" >> $GITHUB_OUTPUT
+          fi
 
     - name: Create GitHub Release
       id: create_release
@@ -263,6 +263,8 @@ jobs:
           ## Changes in version ${{ inputs.new_version }}
           
           ${{ steps.get_changelog.outputs.changelog }}
+          
+          ${{ inputs.changelog_url != '' && format('[Full Changelog]({0})', inputs.changelog_url) || '' }}
           
           ## Build Information
           
