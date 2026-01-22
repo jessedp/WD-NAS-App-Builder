@@ -117,7 +117,7 @@ jobs:
             inputs: {
               package: 'copyparty',
               new_version: newVersion,
-              changelog: 'Automatically detected new version from upstream',
+              changelog: 'Changelog not available',
               changelog_url: '${{ steps.fetch_latest.outputs.release_url }}'
             }
           });
