@@ -4,9 +4,9 @@
 . "$1/helpers.sh" "$0" "$1";
 
 CP_BIN="${APP_PATH}/copyparty-sfx.py"
-CONFIG_FILE="${APPS_PATH}/copyparty_conf/copyparty.conf"
+CONFIG_FILE="${APP_PERSISTENT_DATA_PATH}/copyparty.conf"
 PID_FILE="/var/run/${APP_NAME}.pid"
-export XDG_CONFIG_HOME="${APPS_PATH}/copyparty_conf/"
+export XDG_CONFIG_HOME="${APP_PERSISTENT_DATA_PATH}/"
 
 log "Starting copyparty..."
 

@@ -27,10 +27,9 @@ log "creating web path: ${APP_WEB_PATH}"
 mkdir -p ${APP_WEB_PATH}
 
 # Create persistent configuration directory
-CONFIG_DIR="${APPS_PATH}/tailscale_conf"
-if [ ! -d "${CONFIG_DIR}" ]; then
-    log "Creating persistent configuration directory: ${CONFIG_DIR}"
-    mkdir -p "${CONFIG_DIR}"
+if [ ! -d "${APP_PERSISTENT_DATA_PATH}" ]; then
+    log "Creating persistent configuration directory: ${APP_PERSISTENT_DATA_PATH}"
+    mkdir -p "${APP_PERSISTENT_DATA_PATH}"
 fi
 
 log "linking redirect page from: ${APP_PATH}/web/* to: ${APP_WEB_PATH}"

@@ -27,7 +27,6 @@
 
 ST_BIN="${APP_PATH}/syncthing"
 PID_FILE="/var/run/${APP_NAME}.pid"
-CONFIG_DIR="${APPS_PATH}/syncthing_conf"
 
 log "starting syncthing..."
 
@@ -41,13 +40,13 @@ ${ST_BIN} --version >> ${LOG} 2>&1
 # -gui-address: listen address
 # -logfile: log file path (optional, but good for debugging)
 
-export HOME="${CONFIG_DIR}"
+export HOME="${APP_PERSISTENT_DATA_PATH}"
 export STNOUPGRADE=1
 
-log "COMMAND: ${ST_BIN} -home=${CONFIG_DIR} -no-browser -gui-address=0.0.0.0:8384"
+log "COMMAND: ${ST_BIN} -home=${APP_PERSISTENT_DATA_PATH} -no-browser -gui-address=0.0.0.0:8384"
 
 nohup ${ST_BIN} \
-    --home="${CONFIG_DIR}" \
+    --home="${APP_PERSISTENT_DATA_PATH}" \
     --no-browser \
     --gui-address="0.0.0.0:8384" \
     > "${APP_PATH}/syncthing.log" 2>&1 &

@@ -8,14 +8,13 @@ log "creating web path: ${APP_WEB_PATH}"
 mkdir -p ${APP_WEB_PATH}
 
 # Create persistent configuration directory
-CONFIG_DIR="${APPS_PATH}/copyparty_conf"
-if [ ! -d "${CONFIG_DIR}" ]; then
-    log "Creating persistent configuration directory: ${CONFIG_DIR}"
-    mkdir -p "${CONFIG_DIR}"
+if [ ! -d "${APP_PERSISTENT_DATA_PATH}" ]; then
+    log "Creating persistent configuration directory: ${APP_PERSISTENT_DATA_PATH}"
+    mkdir -p "${APP_PERSISTENT_DATA_PATH}"
 fi
 
 # Create default config if it doesn't exist
-CONFIG_FILE="${CONFIG_DIR}/copyparty.conf"
+CONFIG_FILE="${APP_PERSISTENT_DATA_PATH}/copyparty.conf"
 if [ ! -f "${CONFIG_FILE}" ]; then
     log "Creating default config file: ${CONFIG_FILE}"
     cat <<EOF > "${CONFIG_FILE}"
