@@ -6,6 +6,35 @@ header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Cache-Control: post-check=0, pre-check=0", false);
 header("Pragma: no-cache");
 
+// Configuration Paths
+$app_dir = realpath(__DIR__ . '/..');
+$apps_root = dirname($app_dir);
+$log_file = $app_dir . '/copyparty.log';
+$conf_file = $apps_root . '/copyparty_conf/copyparty.conf';
+$port = 3923;
+
+// Helper function to check if Copyparty is running
+function is_copyparty_running($host, $port) {
+    $connection = @fsockopen($host, $port, $errno, $errstr, 1);
+    if (is_resource($connection)) {
+        fclose($connection);
+        return true;
+    }
+    return false;
+}
+
+// Check status
+$is_running = is_copyparty_running('127.0.0.1', $port);
+
+// Redirect if running and not in "recovery mode" (no post action)
+// We add a query param ?recovery=1 to force stay on this page if needed, mostly for debugging or if the redirect logic loops.
+// But the requirement is "The redirect should always happen automatically".
+if ($is_running && !isset($_GET['recovery']) && $_SERVER['REQUEST_METHOD'] !== 'POST') {
+    $host = $_SERVER['SERVER_NAME']; // Use the hostname the user accessed the NAS with
+    header("Location: http://$host:$port");
+    exit;
+}
+
 // Security check - identical to existing apps
 if (!isset($_SESSION['username'])) {
     header('Content-Type: text/html; charset=utf-8');
@@ -42,26 +71,6 @@ if (!isset($_SESSION['username'])) {
 </html>';
     exit;
 }
-
-// Configuration Paths
-$app_dir = realpath(__DIR__ . '/..');
-$apps_root = dirname($app_dir);
-$log_file = $app_dir . '/copyparty.log';
-$conf_file = $apps_root . '/copyparty_conf/copyparty.conf';
-$port = 3923;
-
-// Helper function to check if Copyparty is running
-function is_copyparty_running($host, $port) {
-    $connection = @fsockopen($host, $port, $errno, $errstr, 1);
-    if (is_resource($connection)) {
-        fclose($connection);
-        return true;
-    }
-    return false;
-}
-
-// Check status
-$is_running = is_copyparty_running('127.0.0.1', $port);
 
 // Handle Configuration Save
 $message = '';
@@ -123,15 +132,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_config'])) {
         $message = "Configuration file not found at expected path: " . htmlspecialchars($conf_file);
         $message_type = 'error';
     }
-}
-
-// Redirect if running and not in "recovery mode" (no post action)
-// We add a query param ?recovery=1 to force stay on this page if needed, mostly for debugging or if the redirect logic loops.
-// But the requirement is "The redirect should always happen automatically".
-if ($is_running && !isset($_GET['recovery']) && $_SERVER['REQUEST_METHOD'] !== 'POST') {
-    $host = $_SERVER['SERVER_NAME']; // Use the hostname the user accessed the NAS with
-    header("Location: http://$host:$port");
-    exit;
 }
 
 // Read Log File (Last 50 lines)
