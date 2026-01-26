@@ -24,6 +24,7 @@ Being Regularly Updated:
 - [Syncthing](https://syncthing.net/) ([latest release](https://github.com/jessedp/WD-NAS-App-Builder/releases/tag/latest-syncthing)) ([docs](docs/apps/syncthing/README.md))
 - [Tailscale](https://tailscale.com/) ([latest release](https://github.com/jessedp/WD-NAS-App-Builder/releases/tag/latest-tailscale)) ([docs](docs/apps/tailscale/README.md))
 - [copyparty](https://github.com/9001/copyparty) ([latest release](https://github.com/jessedp/WD-NAS-App-Builder/releases/tag/latest-copyparty)) ([docs](docs/apps/copyparty/README.md))
+- [Rclone](https://rclone.org/) ([latest release](https://github.com/jessedp/WD-NAS-App-Builder/releases/tag/latest-rclone)) ([docs](docs/apps/rclone/README.md))
 
 
 Untested app configurations probably work (mostly) fine, but are not yet up-to-date or automatically updated:
