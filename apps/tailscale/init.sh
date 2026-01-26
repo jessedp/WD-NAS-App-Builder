@@ -23,8 +23,8 @@
 # ----------------------------------------------------------------------
 
 # Create folder for the webpage
-log "creating web path: ${APP_WEB_PATH}"
-mkdir -p ${APP_WEB_PATH}
+log "creating web path: /var/www/apps/tailscale"
+mkdir -p /var/www/apps/tailscale
 
 # Create persistent configuration directory
 if [ ! -d "${APP_PERSISTENT_DATA_PATH}" ]; then
@@ -32,5 +32,5 @@ if [ ! -d "${APP_PERSISTENT_DATA_PATH}" ]; then
     mkdir -p "${APP_PERSISTENT_DATA_PATH}"
 fi
 
-log "linking redirect page from: ${APP_PATH}/web/* to: ${APP_WEB_PATH}"
-ln -sf ${APP_PATH}/web/* ${APP_WEB_PATH} >> ${LOG} 2>&1
+log "linking redirect page from: ${APP_PATH}/web/* to: /var/www/apps/tailscale/"
+ln -sf ${APP_PATH}/web/* /var/www/apps/tailscale/ >> ${LOG} 2>&1
