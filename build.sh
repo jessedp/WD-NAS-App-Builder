@@ -5,6 +5,8 @@
 # Usage:
 #
 #  ./build.sh <package> [<host> <model> <version>]
+#
+#  MODEL_OVERRIDE=MyCloudPR4100 ./build.sh <package>  (Builds only for specific model)
 
 APP_NAME=$1
 
@@ -39,7 +41,7 @@ fi
 
 # Create packages for app
 if [[ "$(docker images -q wd_builder:latest 2> /dev/null)" != "" ]]; then
-	docker run -it -v $(pwd):/data wd_builder:latest /bin/bash -c "\
+	docker run -it -v $(pwd):/data -e MODEL_OVERRIDE="${MODEL_OVERRIDE}" wd_builder:latest /bin/bash -c "\
 	cd /data;\
 	find -type f -name \"*.sh\" -exec chmod +x {} +;\
 	find -type f -name \"*.rc\" -exec chmod +x {} +;\
@@ -54,7 +56,7 @@ fi
 # Deploy to a host machine
 HOST="$2"
 if [ -z "${HOST}" ]; then
-	exit 1
+	exit 0
 fi
 
 echo -e "\nDeploying to Host: ${HOST}"

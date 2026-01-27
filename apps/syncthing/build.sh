@@ -7,11 +7,7 @@ ST_VERSION="v2.0.13"
 # Update version in apkg.rc (remove 'v' prefix)
 sed -i "s/Version:.*/Version:\t\t\t${ST_VERSION#v}/" apkg.rc
 
-# Some models use AMD64 architecture and others use ARM
-declare -A MODELS
-MODELS[amd64]="MyCloudPR4100 MyCloudPR2100 WDMyCloudDL4100 WDMyCloudDL2100"
-MODELS[armhf]="WDCloud WDMyCloud WDMyCloudMirror WDMyCloudMirrorG2 WDMyCloudEX4100 WDMyCloudEX2100 MyCloudEX2Ultra"
-# MODELS[arm64]="" # Add arm64 models here when identified
+# Note: MODELS are defined in build_helpers.sh
 
 for ARCH in "${!MODELS[@]}"; do
 	# Build the archive for all models of this architecture
@@ -46,6 +42,7 @@ for ARCH in "${!MODELS[@]}"; do
     cp "${EXTRACTED_DIR}/syncthing" .
     chmod +x syncthing
 
+	# build() handles MODEL_OVERRIDE internally
 	build ${MODELS[${ARCH}]} ${ARCH}
     
     # Cleanup for next iteration

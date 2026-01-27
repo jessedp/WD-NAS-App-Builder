@@ -1,7 +1,7 @@
 #!/bin/bash
 . "../build_helpers.sh"
 
-RCLONE_VERSION="${RCLONE_VERSION:-v1.69.0}"
+RCLONE_VERSION="${RCLONE_VERSION:-v1.72.1}"
 # Ensure version has 'v' prefix
 if [[ ! $RCLONE_VERSION == v* ]]; then
     RCLONE_VERSION="v$RCLONE_VERSION"
@@ -12,6 +12,9 @@ if ! command -v unzip &> /dev/null; then
     echo "Installing unzip..."
     apt-get update && apt-get install -y unzip
 fi
+
+# Ensure Package name matches directory exactly
+sed -i "s/Package:.*/Package:\t\t\t\tmySync/" apkg.rc
 
 # Note: MODELS are defined in build_helpers.sh
 
@@ -32,15 +35,14 @@ for ARCH in "${!MODELS[@]}"; do
     echo "Extracting ${FILENAME}..."
     unzip -o "$FILENAME"
     
-    # Move binary to root (renaming to just 'rclone')
+    # Move binary to bin/ (as expected by init.sh)
     EXTRACTED_DIR="rclone-${RCLONE_VERSION}-linux-${RCLONE_ARCH}"
     if [ -f "${EXTRACTED_DIR}/rclone" ]; then
-        mv "${EXTRACTED_DIR}/rclone" .
-        chmod +x rclone
-        echo "Rclone binary extracted and moved."
+        cp "${EXTRACTED_DIR}/rclone" bin/
+        chmod +x bin/rclone
+        echo "Rclone binary placed in bin/rclone"
     else
         echo "ERROR: Rclone binary not found in extracted directory!"
-        ls -R "${EXTRACTED_DIR}"
         exit 1
     fi
     
@@ -48,10 +50,10 @@ for ARCH in "${!MODELS[@]}"; do
     # build() handles MODEL_OVERRIDE internally
 	build ${MODELS[${ARCH}]} ${ARCH}
     
-    # Cleanup
+    # Cleanup for next arch
     rm "$FILENAME"
     rm -rf "${EXTRACTED_DIR}"
-    rm rclone
+    rm bin/rclone
 done
 
 # Cleanup

@@ -14,6 +14,12 @@ if [ -z ${APP_PATH+x} ]; then
 	RELEASE_DIR="../../packages/${APP_NAME}/${APP_VERSION}"
 	DOWNLOAD_CACHE_DIR="${REPO_PATH}/downloads"
 
+	# Standard WD NAS Models
+	declare -A MODELS
+	MODELS[amd64]="MyCloudPR4100 MyCloudPR2100 WDMyCloudDL4100 WDMyCloudDL2100"
+	MODELS[armhf]="WDCloud WDMyCloud WDMyCloudMirror WDMyCloudMirrorG2 WDMyCloudEX4100 WDMyCloudEX2100 MyCloudEX2Ultra"
+	# MODELS[arm64]=""
+
 	# DECLARE FUNCTIONS --------------------------------------------------------
 
 	# Downloads a file from a URL and caches it in the downloads directory
@@ -41,8 +47,9 @@ if [ -z ${APP_PATH+x} ]; then
 	}
 
 	# Build function accepts an array of WD NAS device models and builds for all of them
+	# Usage: build model1 [model2 ...] arch
 	build() {
-		models=("$@")
+		models=($@)
 		((last_id=${#models[@]} - 1))
 		arch=${models[last_id]}
 		unset models[last_id]
@@ -60,21 +67,46 @@ if [ -z ${APP_PATH+x} ]; then
 			arch="armhf"
 		fi
 
-		# Build the archive for all models of this architecture
-		for model in "${models[@]}"; do
+		# Check if we should build for this arch/model based on override
+		build_list=()
+		if [ -n "$MODEL_OVERRIDE" ]; then
+			for model in "${models[@]}"; do
+				if [ "$model" == "$MODEL_OVERRIDE" ]; then
+					build_list+=("$model")
+				fi
+			done
+			if [ ${#build_list[@]} -eq 0 ]; then
+				# Override set but no matching models in this batch, skipping
+				return 0
+			fi
+		else
+			build_list=("${models[@]}")
+		fi
+
+		# Build the archive for all filtered models of this architecture
+		for model in "${build_list[@]}"; do
 			echo -e  "\n-----------------------------------"
 			echo "BUILDING FOR: ${model} ($arch)"
 			echo -e  "-----------------------------------\n"
 			../../mksapkg-OS5 -E -s -m ${model} > /dev/null
 		done
 		
-		# Create a source bundle for this architecture
-		echo -e "\nBundle sources for ${arch} into release dir"
-		src_tar="${RELEASE_DIR}/${APP_NAME}_${APP_VERSION}_${arch}.tar.gz"
-		tar -czf ${src_tar} -C ${APP_PATH} .
+		# Create a source bundle for this architecture (only if we built something)
+		if [ ${#build_list[@]} -gt 0 ]; then
+			echo -e "\nBundle sources for ${arch} into release dir"
+			src_tar="${RELEASE_DIR}/${APP_NAME}_${APP_VERSION}_${arch}.tar.gz"
+			tar -czf ${src_tar} -C ${APP_PATH} .
+		fi
 
 		rm apkg.sign
 		rm apkg.xml
+	}
+
+	# Helper to build all standard models defined in MODELS array
+	build_all() {
+		for ARCH in "${!MODELS[@]}"; do
+			build ${MODELS[${ARCH}]} ${ARCH}
+		done
 	}
 
 	# Restore any files temporarily imported or removed
@@ -116,6 +148,11 @@ if [ -z ${APP_PATH+x} ]; then
 
 	# Ensure that our release directory is empty
 	prepare_release_dir() {	
+		# Only clear if NO override, or if it's the first run? 
+		# If we build multiple times (e.g. for different archs), we don't want to wipe previous results.
+		# But prepare_release_dir is called ONCE at start of script.
+		# If we override, we might only build one bin.
+		# Users probably expect a clean slate.
 		rm -rf "${RELEASE_DIR}"
 		mkdir -p "${RELEASE_DIR}"
 		echo -e "\nRelease dir created: ${RELEASE_DIR}"
@@ -125,12 +162,12 @@ if [ -z ${APP_PATH+x} ]; then
 	move_binaries_to_release_dir() {	
 		echo -e "\nMoving binaries to release dir"
 		find ${APPS_PATH} -maxdepth 1 -name "*.bin*" | while read file; do
-			file=${file/${APPS_PATH}\//}
+			file=${file/${APPS_PATH}\/}
 			parts=(${file//_${APP_NAME}_/ })
 			newFile="${APP_NAME}_${APP_VERSION}_${parts[0]#*/}.bin"
-			mv ${APPS_PATH}/${file} ${APPS_PATH}/${newFile}
+			mv ${APPS_PATH}/${file} ${APPS_PATH}/${newFile} 2>/dev/null || true
 		done
-		mv ${APPS_PATH}/${APP_NAME}_*.bin ${RELEASE_DIR}
+		mv ${APPS_PATH}/${APP_NAME}_*.bin ${RELEASE_DIR} 2>/dev/null || true
 	}
 
 	# Create a latest release file for ease of deployment testing
@@ -162,6 +199,9 @@ if [ -z ${APP_PATH+x} ]; then
 	# BEGIN BUILD --------------------------------------------------------------
 
 	echo "Building ${APP_NAME} version ${APP_VERSION}"
+	if [ -n "$MODEL_OVERRIDE" ]; then
+		echo "Model Override: ${MODEL_OVERRIDE}"
+	fi
 
 	restore_files
 	prepare_files
