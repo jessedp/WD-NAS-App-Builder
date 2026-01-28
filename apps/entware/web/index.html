@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Entware</title>
+</head>
+<body>
+<div class="entware-app">
+    <style>
+        .entware-app {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            padding: 20px;
+            text-align: left;
+            max-width: 100%;
+            color: #212529;
+            box-sizing: border-box;
+        }
+        .entware-app * { box-sizing: border-box; }
+
+        .entware-app header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; border-bottom: 1px solid #dee2e6; padding-bottom: 1rem; }
+        .entware-app .brand { display: flex; align-items: center; gap: 12px; }
+        .entware-app .logo { width: 40px; height: 40px; object-fit: contain; }
+        .entware-app h1 { margin: 0; font-size: 1.75rem; color: #000; }
+        .entware-app a { color: #007bff; text-decoration: none; }
+        .entware-app a:hover { text-decoration: underline; }
+
+        .entware-app .section { margin-bottom: 25px; }
+        .entware-app .card { border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin-bottom: 20px; background-color: #fff; }
+        .entware-app h2 { font-size: 1.25rem; margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid #f1f1f1; padding-bottom: 10px; }
+
+        .entware-app .form-control { width: 100%; padding: 0.375rem 0.75rem; font-size: 1rem; line-height: 1.5; color: #495057; background-color: #fff; border: 1px solid #ced4da; border-radius: 0.25rem; }
+
+        .entware-app .btn { display: inline-block; font-weight: 400; text-align: center; vertical-align: middle; cursor: pointer; border: 1px solid transparent; padding: 0.375rem 0.75rem; font-size: 0.9rem; line-height: 1.5; border-radius: 0.25rem; color: #000 !important; }
+        .entware-app .btn-primary { background-color: #007bff; border-color: #007bff; color: #000 !important; }
+        .entware-app .btn-primary:hover { background-color: #0069d9; border-color: #0062cc; }
+        .entware-app .btn-danger { background-color: #dc3545; border-color: #dc3545; color: #000 !important; }
+        .entware-app .btn-danger:hover { background-color: #c82333; }
+        .entware-app .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.875rem; line-height: 1.5; border-radius: 0.2rem; }
+
+        .entware-app .log-container { background: #212529; color: #f8f9fa; padding: 10px; border-radius: 4px; height: 150px; overflow-y: auto; font-family: monospace; font-size: 0.85rem; white-space: pre-wrap; margin-bottom: 10px; border: 1px solid #444; }
+        .entware-app .log-line { border-bottom: 1px solid #333; padding: 2px 0; }
+
+        .entware-app table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .entware-app th, .entware-app td { padding: 10px; text-align: left; border-bottom: 1px solid #dee2e6; vertical-align: middle; }
+        .entware-app th { background-color: #f8f9fa; font-weight: 600; }
+        .entware-app .table-actions { width: 100px; text-align: right; }
+        .entware-app .pkg-ver { color: #495057; font-size: 0.9em; background: #e9ecef; padding: 2px 6px; border-radius: 4px; }
+
+        .entware-app .core-package { background-color: #f0f7ff; }
+        .entware-app .core-badge { background: #007bff; color: #fff; font-size: 0.75rem; padding: 2px 5px; border-radius: 3px; font-weight: bold; margin-left: 5px; }
+    </style>
+
+    <header>
+        <div class="brand">
+            <img src="/apps/entware/entware.png" class="logo" alt="Entware Logo">
+            <h1>Entware</h1>
+        </div>
+        <div>
+            <a href="https://entware.net/about.html" target="_blank">About Entware</a>
+        </div>
+    </header>
+
+    <div class="section">
+        <div class="card">
+            <h2>Activity Log</h2>
+            <div id="status-log" class="log-container">Ready.</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="card">
+            <h2>Search Packages</h2>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <input type="text" id="search-input" class="form-control" placeholder="Enter package name (e.g. tree, htop)..." onkeypress="if(event.key === 'Enter') doSearch()">
+                <button type="button" class="btn btn-primary" onclick="doSearch()">Search</button>
+            </div>
+            <div id="search-results-container"></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid #f1f1f1; margin-bottom: 10px; padding-bottom: 10px;">
+                <h2 style="border:none; margin:0; padding:0;">Installed Packages</h2>
+                <button class="btn btn-primary btn-sm" onclick="loadInstalled()">Refresh List</button>
+            </div>
+            <div id="installed-list-container">
+                <div style="color:#666; padding: 20px; text-align: center;">Loading installed packages...</div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        var entwareUrl = "/apps/entware/entware.php";
+        var entwareCorePackages = [
+            'entware-opt', 'entware-release', 'entware-upgrade',
+            'libc', 'libgcc', 'libpthread', 'librt', 'libssp', 'libstdcpp',
+            'locales', 'opkg', 'terminfo', 'findutils', 'grep', 'libpcre2'
+        ];
+
+        function isCore(name) {
+            if (entwareCorePackages.includes(name)) return true;
+            if (name.startsWith('zoneinfo-')) return true;
+            return false;
+        }
+
+        function log(message, isHtml = false) {
+            const el = document.getElementById('status-log');
+            if (!el) return;
+            const time = new Date().toLocaleTimeString();
+            const line = document.createElement('div');
+            line.className = 'log-line';
+            if (isHtml) {
+                line.innerHTML = `<span style="color:#888">[${time}]</span> ${message}`;
+            } else {
+                line.innerText = `[${time}] ${message}`;
+            }
+            el.appendChild(line);
+            el.scrollTop = el.scrollHeight;
+        }
+
+        async function apiCall(method, params = {}) {
+            let formData = new FormData();
+            for (let key in params) {
+                formData.append(key, params[key]);
+            }
+            let queryString = new URLSearchParams(formData);
+
+            try {
+                let response = await fetch(`${entwareUrl}?method=${method}&${queryString.toString()}`, {
+                    method: 'POST',
+                });
+                return await response.text();
+            } catch (error) {
+                log(`Error calling ${method}: ${error.message}`);
+                return null;
+            }
+        }
+
+        async function doSearch() {
+            const query = document.getElementById('search-input').value.trim();
+            if (!query) return;
+
+            log(`Searching for '${query}'...`);
+            const container = document.getElementById('search-results-container');
+            container.innerHTML = '<div style="color:#666; padding:10px;">Searching...</div>';
+
+            const text = await apiCall('search', { package_name: query });
+
+            if (text) {
+                const div = document.createElement('div');
+                div.innerHTML = text;
+                const lines = div.innerText.split('\n').filter(l => l.trim().length > 0);
+
+                if (lines.length === 0 || text.includes("File not found")) {
+                    container.innerHTML = '<div style="color:#666; padding:10px;">No packages found.</div>';
+                    log("Search returned no results.");
+                    return;
+                }
+
+                let html = '<table><thead><tr><th>Package</th><th>Version</th><th>Description</th><th class="table-actions">Action</th></tr></thead><tbody>';
+
+                let count = 0;
+                lines.forEach(line => {
+                    const parts = line.split(' - ');
+                    if (parts.length >= 2) {
+                        const name = parts[0].trim();
+                        const ver = parts[1].trim();
+                        const desc = parts.slice(2).join(' - ').trim();
+
+                        html += `<tr>
+                            <td><strong>${name}</strong></td>
+                            <td><span class="pkg-ver">${ver}</span></td>
+                            <td>${desc}</td>
+                            <td class="table-actions">
+                                <button class="btn btn-primary btn-sm" onclick="installPackage('${name}')">Install</button>
+                            </td>
+                        </tr>`;
+                        count++;
+                    }
+                });
+                html += '</tbody></table>';
+                container.innerHTML = html;
+                log(`Search found ${count} packages.`);
+            } else {
+                container.innerHTML = '<div style="color:red; padding:10px;">Search failed.</div>';
+            }
+        }
+
+        async function installPackage(name) {
+            if (!confirm(`Install package '${name}'?`)) return;
+
+            log(`Installing ${name}...`);
+            const result = await apiCall('install', { package_name: name });
+            if (result) {
+                const div = document.createElement('div');
+                div.innerHTML = result;
+                log(div.innerText);
+                log("Installation finished. Refreshing list...");
+                loadInstalled();
+            }
+        }
+
+        async function removePackage(name) {
+            let msg = `Remove package '${name}'?`;
+            if (isCore(name)) {
+                msg = `WARNING: '${name}' is a CORE Entware package. Removing it may break Entware or the entire system! Are you absolutely sure?`;
+            }
+            if (!confirm(msg)) return;
+
+            log(`Removing ${name}...`);
+            const result = await apiCall('remove', { package_name: name });
+            if (result) {
+                const div = document.createElement('div');
+                div.innerHTML = result;
+                log(div.innerText);
+                log("Removal finished. Refreshing list...");
+                loadInstalled();
+            }
+        }
+
+        async function loadInstalled() {
+            const container = document.getElementById('installed-list-container');
+            const text = await apiCall('list-installed');
+
+            if (text) {
+                const cleanText = text.replace(/<br\s*\/?>/gi, '\n');
+                const div = document.createElement('div');
+                div.innerHTML = cleanText;
+                const lines = div.innerText.split('\n').filter(l => l.trim().length > 0);
+
+                let html = '<table><thead><tr><th>Package</th><th>Version</th><th class="table-actions">Action</th></tr></thead><tbody>';
+
+                let count = 0;
+                lines.forEach(line => {
+                    const parts = line.split(' - ');
+                    if (parts.length >= 2) {
+                        const name = parts[0].trim();
+                        const ver = parts[1].trim();
+                        const core = isCore(name);
+
+                        html += `<tr class="${core ? 'core-package' : ''}">
+                            <td><strong>${name}</strong>${core ? '<span class="core-badge">CORE</span>' : ''}</td>
+                            <td><span class="pkg-ver">${ver}</span></td>
+                            <td class="table-actions">
+                                <button class="btn btn-danger btn-sm" onclick="removePackage('${name}')">Remove</button>
+                            </td>
+                        </tr>`;
+                        count++;
+                    }
+                });
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            } else {
+                container.innerHTML = '<div style="color:red; padding:20px; text-align: center;">Failed to load installed packages.</div>';
+            }
+        }
+
+        // Initialize immediately with a slight delay to ensure DOM insertion
+        setTimeout(loadInstalled, 100);
+    </script>
+</div>
+</body>
+</html>

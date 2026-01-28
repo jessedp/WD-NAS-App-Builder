@@ -1,0 +1,23 @@
+Package:			entware
+Version:			1.00
+Packager:			Jesse
+Email:
+Homepage:			http://bin.entware.net/
+Description:		Package manager for embedded devices.
+Icon:				entware.png
+AddonShowName:		Entware
+AddonIndexPage:		index.html
+AddonUsedPort:
+AddonDefaultPort:
+AddonDefaultGroup:
+AddonDefaultUser:
+InstDepend:
+InstConflict:
+StartDepend:
+StartConflict:
+CenterType:			1
+UserControl:		0
+MinFWVer:			5.27.157
+MaxFWVer:
+IndividualFlag:		1
+Hidden:				off

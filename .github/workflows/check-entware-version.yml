@@ -1,0 +1,132 @@
+name: Check Entware Version
+
+on:
+  schedule:
+    # Run daily at 10 AM UTC
+    - cron: '0 10 * * *'
+  workflow_dispatch:
+    inputs:
+      force_check:
+        description: 'Force check for new version even if one exists'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  check-entware-version:
+    runs-on: ubuntu-latest
+    name: Check Entware Version
+    
+    outputs:
+      new_version: ${{ steps.compare.outputs.new_version }}
+      version_changed: ${{ steps.compare.outputs.version_changed }}
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Fetch latest Entware version from RSS
+      id: fetch_latest
+      run: |
+        echo "Fetching Entware feed..."
+        FEED_URL="https://entware.net/feed.xml"
+        RSS_CONTENT=$(curl -s $FEED_URL)
+        
+        if [ -z "$RSS_CONTENT" ]; then
+          echo "ERROR: Failed to fetch Entware feed"
+          exit 1
+        fi
+        
+        # Extract <id>...Changelog</id>
+        # Example: <id>https://entware.net/2025/06/02/Changelog</id>
+        # We look for the pattern date/Changelog inside <id> tags
+        CHANGELOG_ID=$(echo "$RSS_CONTENT" | grep -oP '<id>\K[^<]+Changelog' | head -1)
+        
+        if [ -z "$CHANGELOG_ID" ]; then
+          echo "ERROR: Could not extract Changelog ID from feed"
+          # echo "$RSS_CONTENT" # Debug
+          exit 1
+        fi
+        
+        echo "Found Changelog ID: $CHANGELOG_ID"
+        
+        # Extract date from URL: https://entware.net/2025/06/02/Changelog
+        # We want 20250602
+        # grep the date part
+        DATE_PART=$(echo "$CHANGELOG_ID" | grep -oP '[0-9]{4}/[0-9]{2}/[0-9]{2}')
+        
+        if [ -z "$DATE_PART" ]; then
+           echo "ERROR: Could not parse date from $CHANGELOG_ID"
+           exit 1
+        fi
+        
+        VERSION_NUM=$(echo "$DATE_PART" | sed 's|/||g')
+        
+        echo "Latest Entware version found: $VERSION_NUM"
+        echo "latest_version=$VERSION_NUM" >> $GITHUB_OUTPUT
+        echo "release_url=$CHANGELOG_ID" >> $GITHUB_OUTPUT
+
+    - name: Get latest GitHub release for entware in this repo
+      id: get_release
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { owner, repo } = context.repo;
+          const releases = await github.rest.repos.listReleases({ owner, repo, per_page: 100 });
+          const appReleases = releases.data.filter(r => r.tag_name && r.tag_name.startsWith('entware-v'));
+          
+          if (appReleases.length === 0) {
+            console.log('No existing entware releases found');
+            core.setOutput('current_version', '0.0.0');
+            return;
+          }
+          
+          // tag format: entware-v20250602
+          appReleases.sort((a, b) => b.tag_name.localeCompare(a.tag_name));
+          const latest = appReleases[0].tag_name.replace('entware-v', '');
+          console.log(`Latest local entware version: ${latest}`);
+          core.setOutput('current_version', latest);
+
+    - name: Compare versions
+      id: compare
+      run: |
+        LATEST_VERSION="${{ steps.fetch_latest.outputs.latest_version }}"
+        CURRENT_VERSION="${{ steps.get_release.outputs.current_version }}"
+        
+        echo "Latest version from upstream: $LATEST_VERSION"
+        echo "Current version in our releases: $CURRENT_VERSION"
+        
+        # Numerical comparison just in case
+        if [ "$LATEST_VERSION" != "$CURRENT_VERSION" ]; then
+          echo "✅ New version detected: $LATEST_VERSION"
+          echo "version_changed=true" >> $GITHUB_OUTPUT
+          echo "new_version=$LATEST_VERSION" >> $GITHUB_OUTPUT
+        else
+          echo "✅ No new version."
+          echo "version_changed=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Trigger build workflow if new version
+      if: steps.compare.outputs.version_changed == 'true' || github.event.inputs.force_check == 'true'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { owner, repo } = context.repo;
+          const newVersion = '${{ steps.compare.outputs.new_version }}';
+          
+          console.log(`Triggering build workflow for entware ${newVersion}`);
+          
+          await github.rest.actions.createWorkflowDispatch({
+            owner,
+            repo,
+            workflow_id: 'build-and-release.yml',
+            ref: 'main',
+            inputs: {
+              package: 'entware',
+              new_version: newVersion,
+              changelog: 'See Entware Changelog',
+              changelog_url: '${{ steps.fetch_latest.outputs.release_url }}'
+            }
+          });
