@@ -2,25 +2,25 @@
 // Ensure /opt/bin is in PATH for this script context if possible, or use absolute path
 $opkg_bin = '/opt/bin/opkg';
 
-header('Content-Type: text/html; charset=utf-8');
+header('Content-Type: text/plain; charset=utf-8');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo "Must be post";
     exit;
 }
 
-$method = isset($_GET['method']) ? $_GET['method'] : '';
+$method = isset($_REQUEST['method']) ? $_REQUEST['method'] : '';
 if (empty($method)) {
     // Check POST data if not in query string (JS uses fetch with query string but POST method)
     // The JS fetch code: fetch(`${entwareUrl}?method=${method}&${queryString.toString()}`, { method: 'POST' });
     // So 'method' is in $_GET.
 }
 
-$package_name = isset($_GET['package_name']) ? $_GET['package_name'] : '';
+$package_name = isset($_REQUEST['package_name']) ? $_REQUEST['package_name'] : '';
 
 // Validation
 function validate_package_name($name) {
-    if (!preg_match('/^["\w\.-]+$/', $name)) { // Added . and - to allow standard package names like python-pip
+    if (!preg_match('/^[\w\.\+-]+$/', $name)) { // Fixed regex to allow + and remove weird "
         echo "Invalid package name " . htmlspecialchars($name);
         exit;
     }
@@ -38,14 +38,7 @@ function exec_opkg($args) {
     return $output;
 }
 
-function print_output($output) {
-    $lines = explode("\n", trim($output));
-    foreach ($lines as $line) {
-        if (!empty($line)) {
-            echo "<p>" . htmlspecialchars($line) . "</p>";
-        }
-    }
-}
+
 
 switch ($method) {
     case 'search':
@@ -60,26 +53,26 @@ switch ($method) {
         // But validate_package_name is strict, so it's relatively safe.
         // Python used f"{package_name}*"
         $output = exec_opkg("find " . escapeshellarg($name . '*'));
-        print_output($output);
+        echo $output;
         break;
 
     case 'install':
         $name = validate_package_name($package_name);
         $output = exec_opkg("install " . escapeshellarg($name));
-        print_output($output);
-        echo "<p>Done</p>";
+        echo $output;
+        echo "\nDone";
         break;
 
     case 'remove':
         $name = validate_package_name($package_name);
         $output = exec_opkg("remove " . escapeshellarg($name));
-        print_output($output);
-        echo "<p>Done</p>";
+        echo $output;
+        echo "\nDone";
         break;
 
     case 'list-installed':
         $output = exec_opkg("list-installed");
-        echo nl2br(htmlspecialchars($output));
+        echo $output;
         break;
 
     default:

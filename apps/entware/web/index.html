@@ -121,20 +121,31 @@
 
         async function apiCall(method, params = {}) {
             let formData = new FormData();
+            formData.append('method', method);
             for (let key in params) {
                 formData.append(key, params[key]);
             }
-            let queryString = new URLSearchParams(formData);
 
             try {
-                let response = await fetch(`${entwareUrl}?method=${method}&${queryString.toString()}`, {
+                let response = await fetch(entwareUrl, {
                     method: 'POST',
+                    body: formData
                 });
                 return await response.text();
             } catch (error) {
                 log(`Error calling ${method}: ${error.message}`);
                 return null;
             }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return text;
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
         }
 
         async function doSearch() {
@@ -148,9 +159,7 @@
             const text = await apiCall('search', { package_name: query });
 
             if (text) {
-                const div = document.createElement('div');
-                div.innerHTML = text;
-                const lines = div.innerText.split('\n').filter(l => l.trim().length > 0);
+                const lines = text.split('\n').filter(l => l.trim().length > 0);
 
                 if (lines.length === 0 || text.includes("File not found")) {
                     container.innerHTML = '<div style="color:#666; padding:10px;">No packages found.</div>';
@@ -169,11 +178,11 @@
                         const desc = parts.slice(2).join(' - ').trim();
 
                         html += `<tr>
-                            <td><strong>${name}</strong></td>
-                            <td><span class="pkg-ver">${ver}</span></td>
-                            <td>${desc}</td>
+                            <td><strong>${escapeHtml(name)}</strong></td>
+                            <td><span class="pkg-ver">${escapeHtml(ver)}</span></td>
+                            <td>${escapeHtml(desc)}</td>
                             <td class="table-actions">
-                                <button class="btn btn-primary btn-sm" onclick="installPackage('${name}')">Install</button>
+                                <button class="btn btn-primary btn-sm" onclick="installPackage('${escapeHtml(name)}')">Install</button>
                             </td>
                         </tr>`;
                         count++;
@@ -193,9 +202,7 @@
             log(`Installing ${name}...`);
             const result = await apiCall('install', { package_name: name });
             if (result) {
-                const div = document.createElement('div');
-                div.innerHTML = result;
-                log(div.innerText);
+                log(result);
                 log("Installation finished. Refreshing list...");
                 loadInstalled();
             }
@@ -211,9 +218,7 @@
             log(`Removing ${name}...`);
             const result = await apiCall('remove', { package_name: name });
             if (result) {
-                const div = document.createElement('div');
-                div.innerHTML = result;
-                log(div.innerText);
+                log(result);
                 log("Removal finished. Refreshing list...");
                 loadInstalled();
             }
@@ -224,10 +229,7 @@
             const text = await apiCall('list-installed');
 
             if (text) {
-                const cleanText = text.replace(/<br\s*\/?>/gi, '\n');
-                const div = document.createElement('div');
-                div.innerHTML = cleanText;
-                const lines = div.innerText.split('\n').filter(l => l.trim().length > 0);
+                const lines = text.split('\n').filter(l => l.trim().length > 0);
 
                 let html = '<table><thead><tr><th>Package</th><th>Version</th><th class="table-actions">Action</th></tr></thead><tbody>';
 
@@ -240,10 +242,10 @@
                         const core = isCore(name);
 
                         html += `<tr class="${core ? 'core-package' : ''}">
-                            <td><strong>${name}</strong>${core ? '<span class="core-badge">CORE</span>' : ''}</td>
-                            <td><span class="pkg-ver">${ver}</span></td>
+                            <td><strong>${escapeHtml(name)}</strong>${core ? '<span class="core-badge">CORE</span>' : ''}</td>
+                            <td><span class="pkg-ver">${escapeHtml(ver)}</span></td>
                             <td class="table-actions">
-                                <button class="btn btn-danger btn-sm" onclick="removePackage('${name}')">Remove</button>
+                                <button class="btn btn-danger btn-sm" onclick="removePackage('${escapeHtml(name)}')">Remove</button>
                             </td>
                         </tr>`;
                         count++;

@@ -2,6 +2,11 @@
 
 This guide outlines the steps to add a new application to the repository, ensuring compatibility with the build system, automation, and MyCloud OS5 environment.
 
+# Important documentation
+- Docs on OS5 apps in general are in ../guides/README.md .
+- Docs on our apps build details are in ../apps/README.md .
+
+
 ## 1. Preparation & Discovery
 Before starting, gather the following information about the target application:
 - [ ] **Source URL:** Where is the binary or source code hosted? (e.g., GitHub Releases, PyPI, official download site).
@@ -53,11 +58,11 @@ OS5 apps are installed to a temporary location. To keep data (configs, databases
   # Example snippet for init.sh
   CONFIG_DIR="${path}/../${pkg}_conf"
   CONFIG_FILE="${CONFIG_DIR}/config.conf"
-  
+
   if [ ! -d "$CONFIG_DIR" ]; then
       mkdir -p "$CONFIG_DIR"
   fi
-  
+
   if [ ! -f "$CONFIG_FILE" ]; then
       cp "${path}/default.conf" "$CONFIG_FILE"
   fi
