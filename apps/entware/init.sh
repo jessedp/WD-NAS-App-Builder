@@ -18,11 +18,12 @@ if ! mount | grep -q "on /opt type"; then
     mount --bind "${OPT_ROOT}" /opt
 fi
 
-# Add /opt/bin and /opt/sbin to PATH in profile?
-# OS5 usually resets profile.
-# We can try to append to /etc/profile if not present.
+# Add Entware paths to PATH in profile
+# Note: These modifications will persist until reboot as the rootfs is volatile.
+# We do not remove them on app stop/removal as other apps might depend on them.
 if ! grep -q "/opt/bin" /etc/profile; then
-    echo 'export PATH=$PATH:/opt/bin:/opt/sbin' >> /etc/profile
+    log "Adding /opt/bin, /opt/sbin, and /opt/usr/bin to /etc/profile PATH"
+    echo 'export PATH=$PATH:/opt/bin:/opt/sbin:/opt/usr/bin' >> /etc/profile
 fi
 
 # Link web content

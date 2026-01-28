@@ -1,8 +1,8 @@
 Package:			entware
-Version:			1.00
-Packager:			Jesse
-Email:
-Homepage:			http://bin.entware.net/
+Version:			20250602
+Packager:			jesse
+Email:				jessedp@gmail.com
+Homepage:			https://entware.net/
 Description:		Package manager for embedded devices.
 Icon:				entware.png
 AddonShowName:		Entware
