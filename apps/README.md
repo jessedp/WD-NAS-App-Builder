@@ -69,6 +69,7 @@ In addition to these, all scripts also load in all [APKG helpers](#apkg-helpers)
 | `${APP_UPLOAD_PATH}`          | The path where the app will be initially uploaded                | `/mnt/HD/HD_a2/Nas_Prog/_install`  |
 | `${APPS_PATH}`                | The path where all apps will be installed                        | `/mnt/HD/HD_a2/Nas_Prog`           |
 | `${APP_PERSISTENT_DATA_PATH}` | The path where any persistent data for this app should be stored | `/mnt/HD/HD_a2/Nas_Prog/_template` |
+| `${APP_PERSISTENT_DATA_PATH}` | Alt path where any persistent data for this app should be stored | `/mnt/HD/HD_a2/Nas_Prog/template_conf` |
 | `${USER_GROUP}`               | The system group that the app should run under                   | `mygroup`                          |
 | `${USER_NAME}`                | The system user that the app should run as                       | `myuser`                           |
 | `${LDC_PATH}`                 | The LD config file path                                          | `/etc/ld.so.conf`                  |
