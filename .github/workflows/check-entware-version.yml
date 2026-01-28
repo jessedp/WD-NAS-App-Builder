@@ -115,14 +115,15 @@ jobs:
         script: |
           const { owner, repo } = context.repo;
           const newVersion = '${{ steps.compare.outputs.new_version }}';
+          const ref = context.ref.replace('refs/heads/', '');
           
-          console.log(`Triggering build workflow for entware ${newVersion}`);
+          console.log(`Triggering build workflow for entware ${newVersion} on ref ${ref}`);
           
           await github.rest.actions.createWorkflowDispatch({
             owner,
             repo,
             workflow_id: 'build-and-release.yml',
-            ref: 'main',
+            ref: ref,
             inputs: {
               package: 'entware',
               new_version: newVersion,
