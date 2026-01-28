@@ -15,7 +15,7 @@ InstDepend:
 InstConflict:
 StartDepend:
 StartConflict:
-CenterType:			0
+CenterType:			1
 UserControl:		0
 MinFWVer:			5.27.157
 MaxFWVer:

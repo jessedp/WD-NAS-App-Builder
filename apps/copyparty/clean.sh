@@ -22,5 +22,5 @@
 # --------------------------------------------------------------------
 
 # Remove the web path
-log "removing web path: ${APP_WEB_PATH}"
-rm -rf ${APP_WEB_PATH}
+log "removing web path: /var/www/apps/copyparty"
+rm -rf /var/www/apps/copyparty

@@ -4,8 +4,8 @@
 . "$1/helpers.sh" "$0" "$1";
 
 # Create folder for the webpage
-log "creating web path: ${APP_WEB_PATH}"
-mkdir -p ${APP_WEB_PATH}
+log "creating web path: /var/www/apps/copyparty"
+mkdir -p /var/www/apps/copyparty
 
 # Create persistent configuration directory
 if [ ! -d "${APP_PERSISTENT_DATA_PATH}" ]; then
@@ -36,5 +36,5 @@ if [ ! -f "${CONFIG_FILE}" ]; then
 EOF
 fi
 
-log "linking redirect page from: ${APP_PATH}/web/* to: ${APP_WEB_PATH}"
-ln -sf ${APP_PATH}/web/* ${APP_WEB_PATH} >> ${LOG} 2>&1
+log "linking redirect page from: ${APP_PATH}/web/* to: /var/www/apps/copyparty/"
+ln -sf ${APP_PATH}/web/* /var/www/apps/copyparty/ >> ${LOG} 2>&1
