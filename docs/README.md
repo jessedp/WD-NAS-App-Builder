@@ -5,6 +5,7 @@ This directory contains detailed documentation for the applications and architec
 ## Applications
 
 - [Tailscale](apps/tailscale/README.md)
+- [Entware](apps/entware/README.md)
 - [Syncthing](apps/syncthing/README.md)
 - [copyparty](apps/copyparty/README.md)
 
