@@ -303,9 +303,7 @@ jobs:
         
         # Construct notes
         DOCS_URL="https://github.com/${{ github.repository }}/tree/main/docs/apps/${PACKAGE}"
-        NOTES="Rolling release for **${PACKAGE} v${VERSION}**.
-
-Detailed documentation and installation guide: [docs/apps/${PACKAGE}](${DOCS_URL})"
+        NOTES="Rolling release for **${PACKAGE} v${VERSION}**.\n\nDetailed documentation and installation guide: [docs/apps/${PACKAGE}](${DOCS_URL})"
         if [ -n "$CHANGELOG_URL" ]; then
            NOTES=$(printf "%s\n\n[Full Changelog](%s)" "$NOTES" "$CHANGELOG_URL")
         fi
