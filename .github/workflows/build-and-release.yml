@@ -276,6 +276,8 @@ jobs:
           ## Installation
           
           Download the appropriate .bin file for your WD MyCloud device and install using the WD dashboard.
+          
+          Detailed documentation and installation guide: [docs/apps/${{ inputs.package }}](https://github.com/${{ github.repository }}/tree/main/docs/apps/${{ inputs.package }})
         draft: false
         prerelease: false
         files: |
@@ -300,7 +302,10 @@ jobs:
         gh release delete "$TAG" --cleanup-tag -y || true
         
         # Construct notes
-        NOTES="Rolling release for **${PACKAGE} v${VERSION}**."
+        DOCS_URL="https://github.com/${{ github.repository }}/tree/main/docs/apps/${PACKAGE}"
+        NOTES="Rolling release for **${PACKAGE} v${VERSION}**.
+
+Detailed documentation and installation guide: [docs/apps/${PACKAGE}](${DOCS_URL})"
         if [ -n "$CHANGELOG_URL" ]; then
            NOTES=$(printf "%s\n\n[Full Changelog](%s)" "$NOTES" "$CHANGELOG_URL")
         fi
