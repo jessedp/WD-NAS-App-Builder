@@ -1,22 +1,26 @@
-# Available WD NAS Apps
+![wdmycloud-logo-wide](docs/combined_logo_wide.png)
 
-These are being regularly updated:
+# Available WD My Cloud OS5 Apps
+
+WD My Cloud OS5 still has an active user base, but the third-party app ecosystem has largely stalled.
+This repository automates building and updating modern apps for WD NAS devices running OS5, with installable packages and auto-update notifications.
+
+These can be installed and configured via the web admin __(no SSH required)__.
+
+Currently available:
 - [copyparty](https://github.com/9001/copyparty) ([latest release](https://github.com/jessedp/WD-NAS-App-Builder/releases/tag/latest-copyparty)) ([docs](docs/apps/copyparty/README.md))
 - [Entware](https://entware.net/) ([latest release](https://github.com/jessedp/WD-NAS-App-Builder/releases/tag/latest-entware)) ([docs](docs/apps/entware/README.md))
 - [Syncthing](https://syncthing.net/) ([latest release](https://github.com/jessedp/WD-NAS-App-Builder/releases/tag/latest-syncthing)) ([docs](docs/apps/syncthing/README.md))
 - [Tailscale](https://tailscale.com/) ([latest release](https://github.com/jessedp/WD-NAS-App-Builder/releases/tag/latest-tailscale)) ([docs](docs/apps/tailscale/README.md))
 
-_Extra features_:
-- Can be installed and configured via the web admin (no SSH required)
-- Sends native OS5 email notifications when a new version is available (requires email configured in Settings → Notifications)
-
 _Tested Platforms_: MyCloudPR4100
 
 _Built Platforms_: MyCloudPR4100, MyCloudPR2100, MyCloudEX2Ultra, WDMyCloudDL4100, WDMyCloudDL2100, WDMyCloudEX4100, WDMyCloudEX2100, WDMyCloudMirror, WDMyCloud, WDCloud
 
+_Version Check_: like the OS5 App Store, packages include a weekly version check that sends native OS5 email notifications when a new version is available (manual update required, requires email configured in Settings → Notifications)
 
-## Other Apps
-Untested app configurations that may work (mostly) fine, but may not be up-to-date and are not automatically updated:
+## Incomplete Apps
+Untested app configurations that may work (mostly) fine, but may not be up-to-date, are not pre-built, and are not automatically updated:
 
 
 - [Node 23.5.0](https://nodejs.org/dist/v23.5.0/node-v23.5.0-linux-x64.tar.xz)
@@ -25,7 +29,7 @@ Untested app configurations that may work (mostly) fine, but may not be up-to-da
 - [Mailpit 1.21.8](https://github.com/axllent/mailpit/releases/download/v1.21.8/mailpit-linux-amd64.tar.gz)
 - [ValKey 8.0.1](https://github.com/valkey-io/valkey/archive/refs/tags/8.0.1.tar.gz)
 - [Docker 29.1.3](https://download.docker.com/linux/static/stable/x86_64/docker-29.1.3.tgz) / [Docker-Compose 2.39.4](https://github.com/docker/compose/releases/download/v2.39.4/docker-compose-linux-x86_64) / [Portainer 2.25.1](https://github.com/portainer/portainer/releases/download/2.25.1/portainer-2.25.1-linux-amd64.tar.gz)
-  - *Note: On at least the PR4100, all ports are on the same network interface. Running containers that expose ports already in use by the NAS (like 80 or 443) will cause conflicts.*
+  - _Note_: Mostly unusable. On the PR4100 (likely most/all), all ports are on the same network interface. Running containers that expose ports already in use by the NAS (like 80 or 443) will cause conflicts. There were other container issues as well.
 
 
 # Building Apps
@@ -34,7 +38,7 @@ Untested app configurations that may work (mostly) fine, but may not be up-to-da
 
 This repository contains a bunch of packaging and automated build scripts on top of the ([original repository](https://github.com/paul-norman/WD-NAS-App-Builder) in order to provide current versions of common apps for WD NAS machines running OS5 *(FW > 5.27.157 - Debian Bullseye)*.
 
-In it's original form, the goal was to provide a [Jellyfin server for WD devices](https://features.jellyfin.org/posts/220/port-to-wd-nas-western-digital-pr4100) without the need for Docker / external packages so that hardware transcoding is possible. Dozens of us are itching to ditch Plex, dozens..
+In it's original form, the goal was to provide a [Jellyfin server for WD devices](https://features.jellyfin.org/posts/220/port-to-wd-nas-western-digital-pr4100) without the need for Docker / external packages so that hardware transcoding is possible.
 
 ## Building an existing app
 
@@ -88,6 +92,8 @@ The statically linked files will be created in `/packages/static/<static_app_nam
   - `/packages` - the built apps (static and for devices)
 
 ## Native Jellyfin progress report
+An original motivation for this project was native Jellyfin support. That is __not__ happening here, but this is maintained for historical accuracy.
+
 - [x] Test wrapping existing Jellyfin Debian builds (`jellyfin` app)
   - [x] Installs
   - [x] Runs
@@ -110,7 +116,7 @@ Not sure.
 
 ## Disclaimer
 
-GenAI has absolutely touched this repo, but things are (should be, ugh) manually checked/tested.
+GenAI has absolutely touched this repo, but things should be manually checked/tested.
 
 ## Inspiration / acknowledgements
 
