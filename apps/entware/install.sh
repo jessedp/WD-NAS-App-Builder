@@ -16,6 +16,14 @@
 log "Moving files from: ${APP_UPLOAD_PATH} to: ${APPS_PATH}";
 mv -f "${APP_UPLOAD_PATH}" "${APPS_PATH}";
 
+# Add weekly update check to root crontab (tagged for clean removal)
+CRONTAB="/var/spool/cron/crontabs/root"
+CRON_TAG="${APP_NAME}-update-check"
+if [ -f "${CRONTAB}" ] && ! grep -q "${CRON_TAG}" "${CRONTAB}"; then
+    echo "0 6 * * 1 ${APP_PATH}/check_update.sh # ${CRON_TAG}" >> "${CRONTAB}"
+    log "Added update check cron job"
+fi
+
 # Determine Entware Architecture
 if [ "${HARDWARE_DEBIAN_ARCH}" == "amd64" ]; then
     ENT_ARCH="x64"

@@ -22,5 +22,12 @@
 #  - Remember to make backups of configuration / data here to support upgrades
 # ----------------------------------------------------------------------------
 
+# Remove update check cron entry before wiping app files
+CRONTAB="/var/spool/cron/crontabs/root"
+if [ -f "${CRONTAB}" ]; then
+    sed -i "/${APP_NAME}-update-check/d" "${CRONTAB}"
+    log "Removed update check cron job"
+fi
+
 log "Removing all files from: ${APP_PATH}";
 rm -rf "${APP_PATH}";
