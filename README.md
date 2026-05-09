@@ -1,27 +1,76 @@
 ![wdmycloud-logo-wide](docs/combined_logo_wide.png)
 
-# Available WD My Cloud OS5 Apps
+# WD NAS App Builder
 
-WD My Cloud OS5 still has an active user base, but the third-party app ecosystem has largely stalled.
-This repository automates building and updating modern apps for WD NAS devices running OS5, with installable packages and auto-update notifications.
+WD My Cloud OS5 still has an active user base, but the third-party app ecosystem has largely stalled since WD stopped investing in it. This project fills that gap: reproducible, auto-updating app packages for OS5 devices — installable without SSH, with native update notifications.
 
-These can be installed and configured via the web admin __(no SSH required)__.
+---
 
-Currently available:
-- [copyparty](https://github.com/9001/copyparty) ([latest release](https://github.com/jessedp/WD-NAS-App-Builder/releases/tag/latest-copyparty)) ([docs](docs/apps/copyparty/README.md))
-- [Entware](https://entware.net/) ([latest release](https://github.com/jessedp/WD-NAS-App-Builder/releases/tag/latest-entware)) ([docs](docs/apps/entware/README.md))
-- [Syncthing](https://syncthing.net/) ([latest release](https://github.com/jessedp/WD-NAS-App-Builder/releases/tag/latest-syncthing)) ([docs](docs/apps/syncthing/README.md))
-- [Tailscale](https://tailscale.com/) ([latest release](https://github.com/jessedp/WD-NAS-App-Builder/releases/tag/latest-tailscale)) ([docs](docs/apps/tailscale/README.md))
+## For Users
 
-_Tested Platforms_: MyCloudPR4100
+### Available Apps
 
-_Built Platforms_: MyCloudPR4100, MyCloudPR2100, MyCloudEX2Ultra, WDMyCloudDL4100, WDMyCloudDL2100, WDMyCloudEX4100, WDMyCloudEX2100, WDMyCloudMirror, WDMyCloud, WDCloud
+| App | Latest | Docs |
+|-----|--------|------|
+| [copyparty](https://github.com/9001/copyparty) | [download](https://github.com/jessedp/WD-NAS-App-Builder/releases/tag/latest-copyparty) | [docs](docs/apps/copyparty/README.md) |
+| [Entware](https://entware.net/) | [download](https://github.com/jessedp/WD-NAS-App-Builder/releases/tag/latest-entware) | [docs](docs/apps/entware/README.md) |
+| [Syncthing](https://syncthing.net/) | [download](https://github.com/jessedp/WD-NAS-App-Builder/releases/tag/latest-syncthing) | [docs](docs/apps/syncthing/README.md) |
+| [Tailscale](https://tailscale.com/) | [download](https://github.com/jessedp/WD-NAS-App-Builder/releases/tag/latest-tailscale) | [docs](docs/apps/tailscale/README.md) |
 
-_Version Check_: like the OS5 App Store, packages include a weekly version check that sends native OS5 email notifications when a new version is available (manual update required, requires email configured in Settings → Notifications)
+### Installation
 
-## Incomplete Apps
-Untested app configurations that may work (mostly) fine, but may not be up-to-date, are not pre-built, and are not automatically updated:
+Download the `.bin` for your device and install via **Settings → Apps → Install an app manually** in the WD web admin. No SSH required.
 
+### Auto Updates
+
+Apps check for new upstream releases weekly and send a native OS5 email notification when one is available. Manual reinstall is required to apply the update.
+
+Requires email configured under **Settings → Notifications**.
+
+### Supported Devices
+
+_Tested_: MyCloudPR4100
+
+_Built_: MyCloudPR4100, MyCloudPR2100, MyCloudEX2Ultra, WDMyCloudDL4100, WDMyCloudDL2100, WDMyCloudEX4100, WDMyCloudEX2100, WDMyCloudMirror, WDMyCloud, WDCloud
+
+---
+
+## For Developers
+
+### Building an Existing App
+
+Builds run inside a Debian 11 (Bullseye) Docker container to match the NAS environment:
+
+```bash
+./build.sh <app_name>
+```
+
+Output goes to `/packages/<app_name>/<version>/`. Requires Docker — see the [Docker guide](docker/README.md) or [Windows guide](docker/WINDOWS.md).
+
+### Creating a New App
+
+A [checklist](task_docs/new_app_checklist.md) covers the full process. Short version:
+
+- Copy `apps/template` → `apps/<new_app>`
+- Update `apkg.rc` (`Package` must match the directory name exactly)
+- Customize `build.sh` (runs in Docker) and the lifecycle scripts (`install.sh`, `init.sh`, `start.sh`, `stop.sh`, `remove.sh`) which run on the NAS
+- See the [app guide](apps/README.md) and [guides](guides/README.md)
+
+### Static Linking
+
+The NAS runs a stripped-down Debian Bullseye with no package manager and outdated libraries. Apps that can't run against the system libraries need to be statically linked.
+
+_Note: Check Entware first — it provides many packages without the complexity._
+
+```bash
+./build_static.sh <app_name>
+```
+
+Output goes to `/packages/static/<app_name>/<version>/<arch>/`.
+
+### Incomplete / Untested Apps
+
+These exist in the repo but are not pre-built or automatically updated:
 
 - [Node 23.5.0](https://nodejs.org/dist/v23.5.0/node-v23.5.0-linux-x64.tar.xz)
 - [Go 1.23.4](https://go.dev/dl/go1.23.4.linux-amd64.tar.gz)
@@ -29,98 +78,47 @@ Untested app configurations that may work (mostly) fine, but may not be up-to-da
 - [Mailpit 1.21.8](https://github.com/axllent/mailpit/releases/download/v1.21.8/mailpit-linux-amd64.tar.gz)
 - [ValKey 8.0.1](https://github.com/valkey-io/valkey/archive/refs/tags/8.0.1.tar.gz)
 - [Docker 29.1.3](https://download.docker.com/linux/static/stable/x86_64/docker-29.1.3.tgz) / [Docker-Compose 2.39.4](https://github.com/docker/compose/releases/download/v2.39.4/docker-compose-linux-x86_64) / [Portainer 2.25.1](https://github.com/portainer/portainer/releases/download/2.25.1/portainer-2.25.1-linux-amd64.tar.gz)
-  - _Note_: Mostly unusable. On the PR4100 (likely most/all), all ports are on the same network interface. Running containers that expose ports already in use by the NAS (like 80 or 443) will cause conflicts. There were other container issues as well.
+  - _Note_: Mostly unusable. On the PR4100 (and likely most devices), all ports share the same network interface — containers exposing ports already used by the NAS (80, 443, etc.) will conflict.
 
+### Project Structure
 
-# Building Apps
+- `/apps` — app build definitions and lifecycle scripts
+- `/docker` — Dockerfiles for the build environment
+- `/guides` — notes and reference material
+- `/static` — static linking build instructions
+- `/packages` — built output (gitignored)
 
-## Overview
+---
 
-This repository contains a bunch of packaging and automated build scripts on top of the ([original repository](https://github.com/paul-norman/WD-NAS-App-Builder) in order to provide current versions of common apps for WD NAS machines running OS5 *(FW > 5.27.157 - Debian Bullseye)*.
+## Project Background
 
-In it's original form, the goal was to provide a [Jellyfin server for WD devices](https://features.jellyfin.org/posts/220/port-to-wd-nas-western-digital-pr4100) without the need for Docker / external packages so that hardware transcoding is possible.
+### History
 
-## Building an existing app
+This is built on top of [paul-norman/WD-NAS-App-Builder](https://github.com/paul-norman/WD-NAS-App-Builder), which itself builds on work by [Stefan (aka TFL)](https://github.com/stefaang) in the [WDCommunity repo](https://github.com/WDCommunity/wdpksrc/). The `helpers.sh` script was influenced by Cerberus's [App Template](https://drive.google.com/uc?export=download&id=1Qds0Nh2o4DPlGG6WfIlXLkcChsZlqrp7) from the [WD Community Support forums](https://community.wd.com/t/my-cloud-os5-app-template/286542).
 
-To build an existing app, there is a build script in the root directory that will run the process through a Debian 11 (Bullseye) docker container. For example:
+The original focus was getting Jellyfin running natively on WD devices (see below). The focus here is broader: keeping common apps current and installable.
 
-```bash
-./build.sh <app_name>
-```
+### State of the WD OS5 App Ecosystem (2026)
 
-The WD bin files will be created in `/packages/<app_name>/<version>/*`. A file containing the most recently built version number will also be created in `/packages/<app_name>/latest`.
+- **WDCommunity** ([wdpksrc](https://github.com/WDCommunity/wdpksrc)) appears largely inactive
+- Existing third-party package repos are mostly stale
+- WD itself stopped meaningfully investing in OS5 app support
+- OS5 devices still have a real user base with no official upgrade path
 
-If you don't have docker installed, see the [guide](docker/README.md) in the `docker` directory. If you're on Windows 10 or 11, see the [Windows guide](docker/WINDOWS.md) for WSL / docker installation.
+This repo exists to automate what the community used to do manually: build, package, and distribute current versions of useful apps for these devices. The goal is sustainability, not one-off binaries.
 
+### Jellyfin Experiments
 
-# Creating a new app
-This [checklist](task_docs/new_app_checklist.md) is an expanded version of these steps.
+An original motivation was native Jellyfin support on WD hardware. That is not happening here, but preserved for reference:
 
-- Copy the `apps/template` app directory and create a new app directory from it in the same parent directory.
-  - e.g. `cp -R apps/template apps/new_app`
-- Edit the `apps/<new_app>/apkg.rc` file to have a `Package` value which exactly matches the new directory name.
-  - e.g. `sed -i 's/Package:.*/Package:\t\t\tnew_app/' apps/new_app/apkg.rc`
-  - Other options `apkg.rc` are explained in the [guide](guides/README.md).
-- The `apps/<new_app>/build.sh` script runs locally from Docker to package your app. Customise it to your app's needs *(e.g. if you need to package downloaded binaries)* - see [guide](apps/README.md).
-  - If you're downloading the application files on the WD NAS device itself, you can leave this file alone.
-- All other shell scripts (`apps/<new_app>/*.sh`) run on the WD NAS device itself to perform the actions that are required. See [overview](guides/README.md) and [guide](apps/README.md).
+- [x] Wrapping existing Jellyfin Debian builds (`jellyfin` app) — installs and runs
+- [ ] Loads Jellyfin-Web *(truncates HTML output)*
+- [ ] Use Jellyfin-Ffmpeg *(falls back to 3rd party statically linked version)*
+- [ ] Statically linked ARM build
+- [ ] Automatic SSH installation via `build.sh`
 
-## Building statically linked apps
-
-_Note: Be sure to see Entware has what you need if you find yourself here_
-
-WD NAS devices run a heavily stripped down Debian Bullseye without a package manager, outdated / missing linked libraries and only offer ancient versions of many programs. It's therefore not possible to simply expect many applications to work when built *from* a full Debian machine.
-
-For this reason it's possible to build "statically linked" versions of applications that you want the WD NAS device to run and then include that binary in the app package. These versions have all dependencies bundled with them and require nothing extra.
-
-Creation of these binaries will require an extra build step *(which can be called manually or from `app/<app_name>/build.sh` - e.g. `apps/nano/build.sh`)*
-
-```bash
-./build_static.sh <static_app_name>
-```
-
-The statically linked files will be created in `/packages/static/<static_app_name>/<version>/<arch>/*`. A file containing the most recently built version number will also be created in `/packages/static/<static_app_name>/latest`.
-
-## Project structure
-
-- `/`
-  - `/apps`     - files that build the WD apps
-  - `/docker`   - Dockerfiles used to run builds
-  - `/guides`   - information that I have found / written
-  - `/static`   - build instructions / required files for statically linked programs
-  - ---
-  - `/packages` - the built apps (static and for devices)
-
-## Native Jellyfin progress report
-An original motivation for this project was native Jellyfin support. That is __not__ happening here, but this is maintained for historical accuracy.
-
-- [x] Test wrapping existing Jellyfin Debian builds (`jellyfin` app)
-  - [x] Installs
-  - [x] Runs
-  - [ ] Loads Jellyfin-Web *(truncates HTML output, but does start loading?)*
-  - [ ] Use Jellyfin-Ffmpeg *(currently falling back to 3rd party statically linked version)*
-- [ ] Learn about building / statically linking
-  - [x] Attempt a statically linked build for AMD64 (`nano` app)
-  - [ ] Attempt a statically linked build for ARM
-    - [Guide](https://jensd.be/1126/linux/cross-compiling-for-arm-or-aarch64-on-debian-or-ubuntu)
-    - Create a docker container using `arm-linux-gnueabi-gcc` / `gcc-aarch64-linux-gnu`
-- [ ] Complete and test the automatic SSH installation of apps via the `build.sh` script
-  - [ ] SSH config to the WD NAS device
-  - [ ] Create test file format / helpers
-- [ ] Find others willing to help / test *(preferably someone with an ARM based NAS device)*
-
-
-## Where to find other apps?
-
-Not sure.
+---
 
 ## Disclaimer
 
 GenAI has absolutely touched this repo, but things should be manually checked/tested.
-
-## Inspiration / acknowledgements
-
-This is built on top of https://github.com/paul-norman/WD-NAS-App-Builder, but the focus is more generally on trying to provide updated builds of common apps, not getting Jellyfin running.
-
-
-As he says, that project was/is building principally upon work done by [Stefan (aka TFL)](https://github.com/stefaang) in the [WDCommunity](https://github.com/WDCommunity/wdpksrc/) Github Repo, but the `helper.sh` script was heavily influenced by Cerberus's [App Template](https://drive.google.com/uc?export=download&id=1Qds0Nh2o4DPlGG6WfIlXLkcChsZlqrp7) from the [WD Community Support forums](https://community.wd.com/t/my-cloud-os5-app-template/286542).
