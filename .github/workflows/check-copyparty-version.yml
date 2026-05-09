@@ -76,7 +76,17 @@ jobs:
             return;
           }
           
-          appReleases.sort((a, b) => b.tag_name.localeCompare(a.tag_name));
+          appReleases.sort((a, b) => {
+            const versionA = a.tag_name.replace('copyparty-v', '');
+            const versionB = b.tag_name.replace('copyparty-v', '');
+            const partsA = versionA.split('.').map(Number);
+            const partsB = versionB.split('.').map(Number);
+            for (let i = 0; i < Math.max(partsA.length, partsB.length); i++) {
+              const diff = (partsB[i] || 0) - (partsA[i] || 0);
+              if (diff !== 0) return diff;
+            }
+            return 0;
+          });
           const latest = appReleases[0].tag_name.replace('copyparty-v', '');
           console.log(`Latest local copyparty version: ${latest}`);
           core.setOutput('current_version', latest);
