@@ -22,7 +22,7 @@ jobs:
     
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         fetch-depth: 0
 
@@ -68,6 +68,7 @@ jobs:
           local s="$1"
           s="${s//\\/\\\\}"
           s="${s//\"/\\\"}"
+          s="${s//$/\\$}"
           s="${s//$'\n'/\\n}"
           s="${s//$'\r'/\\r}"
           s="${s//$'\t'/\\t}"
@@ -314,7 +315,7 @@ jobs:
 
     - name: Generate Job Summary
       if: always()
-      uses: actions/github-script@v7
+      uses: actions/github-script@v9
       with:
         script: |
           const fs = require('fs');
@@ -343,7 +344,7 @@ jobs:
 
     - name: Generate PR comment
       if: github.event_name == 'pull_request'
-      uses: actions/github-script@v7
+      uses: actions/github-script@v9
       with:
         script: |
           const fs = require('fs');
@@ -388,13 +389,13 @@ jobs:
           });
 
     - name: Upload validation report
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: validation-report
         path: validation_results.json
 
     - name: Upload auto-updateable apps list
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: auto-updateable-apps
         path: |
