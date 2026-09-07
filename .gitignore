@@ -16,3 +16,4 @@ local.mk
 .env
 *.DS_Store
 *~
+/scratch
