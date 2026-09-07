@@ -7,6 +7,8 @@ if [[ ! $CP_VERSION == v* ]]; then
     CP_VERSION="v$CP_VERSION"
 fi
 
+check_version "${CP_VERSION}"
+
 # Download the SFX (architecture independent python script)
 URL="https://github.com/9001/copyparty/releases/download/${CP_VERSION}/copyparty-sfx.py"
 download "$URL" "copyparty-sfx.py"

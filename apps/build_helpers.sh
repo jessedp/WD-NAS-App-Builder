@@ -46,6 +46,28 @@ if [ -z ${APP_PATH+x} ]; then
 		cp "${DOWNLOAD_CACHE_DIR}/${filename}" .
 	}
 
+	# Ensures the upstream version being packaged matches the version declared in
+	# apkg.rc - guards against a release advertising one version while shipping the
+	# binaries of another
+	check_version() {
+		requested="${1#v}"
+		declared="${APP_VERSION#v}"
+
+		if [ "${requested}" != "${declared}" ]; then
+			abort "apkg.rc declares version ${declared}, but the build is packaging ${requested}"
+		fi
+
+		echo -e "\nPackaging ${APP_NAME} ${requested} (matches apkg.rc)"
+	}
+
+	# Ensures an archive actually extracted, rather than leaving a stale binary
+	# from a previous iteration in place
+	check_extracted() {
+		if [ ! -d "$1" ]; then
+			abort "expected extracted directory $1 was not created"
+		fi
+	}
+
 	# Build function accepts an array of WD NAS device models and builds for all of them
 	# Usage: build model1 [model2 ...] arch
 	build() {

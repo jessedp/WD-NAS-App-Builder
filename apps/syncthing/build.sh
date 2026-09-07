@@ -2,10 +2,13 @@
 . "../build_helpers.sh"
 
 # Syncthing Version
-ST_VERSION="v2.0.13"
+ST_VERSION="${ST_VERSION:-v2.0.13}"
+# Ensure version has 'v' prefix for the download URL if not present
+if [[ ! $ST_VERSION == v* ]]; then
+    ST_VERSION="v$ST_VERSION"
+fi
 
-# Update version in apkg.rc (remove 'v' prefix)
-sed -i "s/Version:.*/Version:\t\t\t${ST_VERSION#v}/" apkg.rc
+check_version "${ST_VERSION}"
 
 # Note: MODELS are defined in build_helpers.sh
 
@@ -38,6 +41,7 @@ for ARCH in "${!MODELS[@]}"; do
     # The tarball extracts to a folder named like syncthing-linux-amd64-v1.27.2
     # We need to find the binary inside and move it to root
     EXTRACTED_DIR=$(tar -tf "$FILENAME" | head -1 | cut -f1 -d"/")
+    check_extracted "$EXTRACTED_DIR"
     echo "Moving binary from ${EXTRACTED_DIR}/syncthing to ."
     cp "${EXTRACTED_DIR}/syncthing" .
     chmod +x syncthing

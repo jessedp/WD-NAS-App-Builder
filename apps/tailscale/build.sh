@@ -1,7 +1,10 @@
 #!/bin/bash
 . "../build_helpers.sh"
 
-TAILSCALE_VERSION="1.92.5"
+TAILSCALE_VERSION="${TAILSCALE_VERSION:-1.92.5}"
+TAILSCALE_VERSION="${TAILSCALE_VERSION#v}"
+
+check_version "${TAILSCALE_VERSION}"
 
 # Note: MODELS are defined in build_helpers.sh
 
@@ -14,17 +17,19 @@ for ARCH in "${!MODELS[@]}"; do
 	
 	FILENAME="tailscale_${TAILSCALE_VERSION}_${TS_ARCH}.tgz"
 	URL="https://pkgs.tailscale.com/stable/${FILENAME}"
+	EXTRACTED_DIR="tailscale_${TAILSCALE_VERSION}_${TS_ARCH}"
 	
 	download "$URL" "$FILENAME"
 	tar xzf "$FILENAME"
+	check_extracted "$EXTRACTED_DIR"
 	
 	# Move binaries to root
-	mv tailscale_${TAILSCALE_VERSION}_${TS_ARCH}/tailscale .
-	mv tailscale_${TAILSCALE_VERSION}_${TS_ARCH}/tailscaled .
+	mv ${EXTRACTED_DIR}/tailscale .
+	mv ${EXTRACTED_DIR}/tailscaled .
 	
 	# Cleanup tar and dir
 	rm "$FILENAME"
-	rm -rf tailscale_${TAILSCALE_VERSION}_${TS_ARCH}
+	rm -rf ${EXTRACTED_DIR}
 
 	# Build the archive for all models of this architecture
     # build() handles MODEL_OVERRIDE internally
