@@ -111,7 +111,7 @@ This repo exists to automate what the community used to do manually: build, pack
 
 An original motivation was native Jellyfin support on WD hardware. That is not happening here, but preserved for reference:
 
-- [x] Wrapping existing Jellyfin Debian builds (`jellyfin` app) — installs and runs
+- [x] Wrapping existing Jellyfin Debian builds — installed and ran (the `jellyfin` app has since been removed from this repo)
 - [ ] Loads Jellyfin-Web *(truncates HTML output)*
 - [ ] Use Jellyfin-Ffmpeg *(falls back to 3rd party statically linked version)*
 - [ ] Statically linked ARM build
