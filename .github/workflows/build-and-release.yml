@@ -167,7 +167,7 @@ jobs:
         echo "✅ Updated apkg.rc"
 
     - name: Setup Docker Buildx
-      uses: docker/setup-buildx-action@v3
+      uses: docker/setup-buildx-action@v4
 
     - name: Build package using wd_builder Docker image
       env:
