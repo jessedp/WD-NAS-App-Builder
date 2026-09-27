@@ -38,3 +38,16 @@ fi
 
 log "linking redirect page from: ${APP_PATH}/web/* to: /var/www/apps/copyparty/"
 ln -sf ${APP_PATH}/web/* /var/www/apps/copyparty/ >> ${LOG} 2>&1
+
+# Weekly update check in root's crontab (tagged for clean removal).
+# This lives in init.sh, not install.sh: OS5 regenerates /var/spool/cron/crontabs/root
+# on every boot, and init.sh is re-run on every boot, so this is what keeps the job alive.
+# Written via a temp file + mv so BusyBox crond notices the directory change.
+CRONTAB="/var/spool/cron/crontabs/root"
+CRON_TAG="${APP_NAME}-update-check"
+if [ -f "${CRONTAB}" ] && ! grep -q "${CRON_TAG}" "${CRONTAB}"; then
+    cp "${CRONTAB}" "${CRONTAB}.tmp" \
+        && echo "0 6 * * 1 ${APP_PATH}/check_update.sh # ${CRON_TAG}" >> "${CRONTAB}.tmp" \
+        && mv "${CRONTAB}.tmp" "${CRONTAB}" \
+        && log "Added update check cron job"
+fi
