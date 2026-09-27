@@ -8,6 +8,7 @@ This directory contains detailed documentation for the applications and architec
 - [Entware](apps/entware/README.md)
 - [Syncthing](apps/syncthing/README.md)
 - [copyparty](apps/copyparty/README.md)
+- [Boot Scripts](apps/bootscripts/README.md) — run scripts at boot; a boot4shell replacement
 
 ## Development Guides
 

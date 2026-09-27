@@ -1,0 +1,23 @@
+Package:			bootscripts
+Version:			1.0.0
+Packager:			Jesse
+Email:
+Homepage:			https://github.com/jessedp/WD-NAS-App-Builder
+Description:		Runs your own shell scripts every time the NAS boots. Restores things OS5 wipes on reboot, such as root's SSH authorized_keys or extra crontab lines.
+Icon:				bootscripts.png
+AddonShowName:		Boot Scripts
+AddonIndexPage:		index.php
+AddonUsedPort:
+AddonDefaultPort:
+AddonDefaultGroup:
+AddonDefaultUser:
+InstDepend:
+InstConflict:
+StartDepend:
+StartConflict:
+CenterType:			1
+UserControl:		1
+MinFWVer:			5.27.157
+MaxFWVer:
+IndividualFlag:		1
+Hidden:				off

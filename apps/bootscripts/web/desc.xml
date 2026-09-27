@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<config>
+	<en-US>Runs your own shell scripts every time the NAS boots. Restores things OS5 wipes on reboot, such as root's SSH authorized_keys or extra crontab lines.</en-US>
+</config>
