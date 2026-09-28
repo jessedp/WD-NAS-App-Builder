@@ -306,6 +306,9 @@ if (isset($_REQUEST['action'])) {
     </div>
 
     <script>
+    // Wrapped in a closure: this page is injected into the WD UI's own window, so nothing here
+    // may leak into the global scope (a global `$` or `esc` breaks the dashboard's jQuery).
+    (function () {
         var siUrl = "/apps/os5-sysinfo/index.php";
         var siConf = null;
 
@@ -317,8 +320,8 @@ if (isset($_REQUEST['action'])) {
                 return await res.json();
             } catch (e) { return { success: false, message: e.message }; }
         }
-        function esc(s) { return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-        function $(id) { return document.getElementById(id); }
+        function siEsc(s) { return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+        function el(id) { return document.getElementById(id); }
         function nasHost() { return (location.hostname || '').replace(/^\[|\]$/g, ''); }
 
         function endpointUrl(conf) {
@@ -338,83 +341,83 @@ if (isset($_REQUEST['action'])) {
 
         var siStatusDoc = null;
         function fillForm(conf, ips) {
-            $('f-LISTENER').checked = conf.LISTENER === '1';
-            let sel = $('f-LISTEN_HOST'); sel.innerHTML = '';
+            el('f-LISTENER').checked = conf.LISTENER === '1';
+            let sel = el('f-LISTEN_HOST'); sel.innerHTML = '';
             let opts = ['0.0.0.0', '127.0.0.1'].concat(ips);
             if (opts.indexOf(conf.LISTEN_HOST) < 0) opts.push(conf.LISTEN_HOST);
             opts.forEach(ip => { let o = document.createElement('option'); o.value = ip; o.textContent = ip === '0.0.0.0' ? '0.0.0.0 (all interfaces)' : ip; sel.appendChild(o); });
-            sel.value = conf.LISTEN_HOST; $('f-LISTEN_HOST_other').value = '';
-            $('f-LISTEN_PORT').value = conf.LISTEN_PORT;
-            $('f-API_KEY').value = '';
-            $('si-keystate').textContent = conf.has_key ? 'A key is set.' : 'No key set: anyone who can reach the port can read the JSON.';
-            $('f-OUTPUT_PATH').value = conf.OUTPUT_PATH;
-            $('f-INTERVAL').value = conf.INTERVAL;
-            $('f-INCLUDE_MODELS').checked = conf.INCLUDE_MODELS === '1';
-            $('f-INCLUDE_SERIALS').checked = conf.INCLUDE_SERIALS === '1';
-            $('f-HEARTBEAT_URL').value = conf.HEARTBEAT_URL;
+            sel.value = conf.LISTEN_HOST; el('f-LISTEN_HOST_other').value = '';
+            el('f-LISTEN_PORT').value = conf.LISTEN_PORT;
+            el('f-API_KEY').value = '';
+            el('si-keystate').textContent = conf.has_key ? 'A key is set.' : 'No key set: anyone who can reach the port can read the JSON.';
+            el('f-OUTPUT_PATH').value = conf.OUTPUT_PATH;
+            el('f-INTERVAL').value = conf.INTERVAL;
+            el('f-INCLUDE_MODELS').checked = conf.INCLUDE_MODELS === '1';
+            el('f-INCLUDE_SERIALS').checked = conf.INCLUDE_SERIALS === '1';
+            el('f-HEARTBEAT_URL').value = conf.HEARTBEAT_URL;
         }
 
         function fillShares(shares) {
-            let sel = $('f-share');
+            let sel = el('f-share');
             let cur = sel.value;
             sel.innerHTML = '<option value="">— pick a share —</option>';
             shares.forEach(s => { let o = document.createElement('option'); o.value = s.name; o.textContent = s.name + '  (' + s.target + ')'; sel.appendChild(o); });
             sel.value = cur;
         }
         document.addEventListener('change', e => {
-            if (e.target && e.target.id === 'f-share' && e.target.value) $('f-OUTPUT_PATH').value = '/shares/' + e.target.value + '/os5-sysinfo/status.json';
+            if (e.target && e.target.id === 'f-share' && e.target.value) el('f-OUTPUT_PATH').value = '/shares/' + e.target.value + '/os5-sysinfo/status.json';
         });
 
         async function siRefresh() {
             const d = await siApi({ action: 'status' });
             if (!d.success) return;
             siConf = d.conf; siStatusDoc = d.status;
-            const run = $('si-run'); run.textContent = d.running ? 'running' : 'stopped'; run.className = 'pill ' + (d.running ? 'pill-ok' : 'pill-bad');
-            const li = $('si-listen');
+            const run = el('si-run'); run.textContent = d.running ? 'running' : 'stopped'; run.className = 'pill ' + (d.running ? 'pill-ok' : 'pill-bad');
+            const li = el('si-listen');
             if (d.conf.LISTENER !== '1') { li.textContent = 'listener off'; li.className = 'pill pill-off'; }
             else { li.textContent = d.listener_up ? 'listening :' + d.conf.LISTEN_PORT : 'port ' + d.conf.LISTEN_PORT + ' not answering'; li.className = 'pill ' + (d.listener_up ? 'pill-ok' : 'pill-warn'); }
-            $('si-url').textContent = d.conf.LISTENER === '1' ? endpointUrl(d.conf) + (d.conf.has_key ? '  (key required)' : '') : (d.conf.OUTPUT_PATH || 'nothing published');
+            el('si-url').textContent = d.conf.LISTENER === '1' ? endpointUrl(d.conf) + (d.conf.has_key ? '  (key required)' : '') : (d.conf.OUTPUT_PATH || 'nothing published');
 
             if (d.status) {
                 let s = d.status, sev = s.health_severity || 'unknown';
                 let cls = sev === 'ok' ? 'pill-ok' : (sev === 'critical' ? 'pill-bad' : 'pill-warn');
-                $('si-summary').innerHTML = '<span class="pill ' + cls + '">' + esc(s.health_icon || '') + ' ' + esc(s.health_display || s.health) + '</span> ' +
-                    'updated ' + esc(s.updated) + ' (' + d.status_age + 's ago)' + (s.error ? ' <span class="err">error: ' + esc(s.error) + '</span>' : '') +
-                    (s.system && s.system.output_error ? ' <span class="err">output file: ' + esc(s.system.output_error) + '</span>' : '');
+                el('si-summary').innerHTML = '<span class="pill ' + cls + '">' + siEsc(s.health_icon || '') + ' ' + siEsc(s.health_display || s.health) + '</span> ' +
+                    'updated ' + siEsc(s.updated) + ' (' + d.status_age + 's ago)' + (s.error ? ' <span class="err">error: ' + siEsc(s.error) + '</span>' : '') +
+                    (s.system && s.system.output_error ? ' <span class="err">output file: ' + siEsc(s.system.output_error) + '</span>' : '');
                 let st = [['Storage', s.storage_display], ['CPU', s.cpu_display], ['RAM', s.ram_display], ['Temps', s.temperature_display], ['SMART', s.smart_display],
                           ['Disks', (s.disks || []).length], ['Uptime', s.system ? s.system.uptime_display : ''], ['Model', s.system ? s.system.model + ' / ' + s.system.firmware : '']];
-                $('si-stats').innerHTML = st.map(x => '<div class="stat"><b>' + esc(x[1] == null ? 'n/a' : x[1]) + '</b><span>' + x[0] + '</span></div>').join('');
-                $('si-json').textContent = JSON.stringify(s, null, 2);
+                el('si-stats').innerHTML = st.map(x => '<div class="stat"><b>' + siEsc(x[1] == null ? 'n/a' : x[1]) + '</b><span>' + x[0] + '</span></div>').join('');
+                el('si-json').textContent = JSON.stringify(s, null, 2);
             } else {
-                $('si-summary').textContent = d.running ? 'No data yet, first collection pending…' : 'Collector not running.';
-                $('si-stats').innerHTML = ''; $('si-json').textContent = '(no status.json yet)';
+                el('si-summary').textContent = d.running ? 'No data yet, first collection pending…' : 'Collector not running.';
+                el('si-stats').innerHTML = ''; el('si-json').textContent = '(no status.json yet)';
             }
             if (document.activeElement === document.body || !document.activeElement || document.activeElement.tagName === 'BUTTON') fillForm(d.conf, d.local_ips);
             fillShares(d.shares);
-            $('si-homepage').textContent = homepageYaml(d.conf);
-            const log = $('si-log'); log.textContent = d.log; log.scrollTop = log.scrollHeight;
-            const out = $('si-out'); if (d.out) { out.style.display = 'block'; out.textContent = 'process output:\n' + d.out; } else out.style.display = 'none';
+            el('si-homepage').textContent = homepageYaml(d.conf);
+            const log = el('si-log'); log.textContent = d.log; log.scrollTop = log.scrollHeight;
+            const out = el('si-out'); if (d.out) { out.style.display = 'block'; out.textContent = 'process output:\n' + d.out; } else out.style.display = 'none';
         }
 
         function siGenKey() {
             let a = new Uint8Array(16); crypto.getRandomValues(a);
-            $('f-API_KEY').value = Array.from(a, b => b.toString(16).padStart(2, '0')).join('');
+            el('f-API_KEY').value = Array.from(a, b => b.toString(16).padStart(2, '0')).join('');
         }
 
         async function siSave() {
-            let host = $('f-LISTEN_HOST_other').value.trim() || $('f-LISTEN_HOST').value;
+            let host = el('f-LISTEN_HOST_other').value.trim() || el('f-LISTEN_HOST').value;
             const d = await siApi({ action: 'save_config',
-                LISTENER: $('f-LISTENER').checked ? '1' : '0', LISTEN_HOST: host, LISTEN_PORT: $('f-LISTEN_PORT').value,
-                API_KEY: $('f-API_KEY').value.trim(), OUTPUT_PATH: $('f-OUTPUT_PATH').value.trim(), INTERVAL: $('f-INTERVAL').value,
-                INCLUDE_MODELS: $('f-INCLUDE_MODELS').checked ? '1' : '0', INCLUDE_SERIALS: $('f-INCLUDE_SERIALS').checked ? '1' : '0',
-                HEARTBEAT_URL: $('f-HEARTBEAT_URL').value.trim() });
-            $('si-errors').textContent = d.success ? '' : d.message;
+                LISTENER: el('f-LISTENER').checked ? '1' : '0', LISTEN_HOST: host, LISTEN_PORT: el('f-LISTEN_PORT').value,
+                API_KEY: el('f-API_KEY').value.trim(), OUTPUT_PATH: el('f-OUTPUT_PATH').value.trim(), INTERVAL: el('f-INTERVAL').value,
+                INCLUDE_MODELS: el('f-INCLUDE_MODELS').checked ? '1' : '0', INCLUDE_SERIALS: el('f-INCLUDE_SERIALS').checked ? '1' : '0',
+                HEARTBEAT_URL: el('f-HEARTBEAT_URL').value.trim() });
+            el('si-errors').textContent = d.success ? '' : d.message;
             alert(d.message);
-            if (d.success) { $('f-API_KEY').value = ''; setTimeout(siRefresh, 4000); }
+            if (d.success) { el('f-API_KEY').value = ''; setTimeout(siRefresh, 4000); }
         }
 
         async function siTestWrite() {
-            const d = await siApi({ action: 'test_write', path: $('f-OUTPUT_PATH').value.trim() });
+            const d = await siApi({ action: 'test_write', path: el('f-OUTPUT_PATH').value.trim() });
             alert(d.message);
         }
 
@@ -426,5 +429,8 @@ if (isset($_REQUEST['action'])) {
 
         setTimeout(siRefresh, 100);
         setInterval(siRefresh, 30000);
+        window.siRefresh = siRefresh; window.siRestart = siRestart; window.siSave = siSave;
+        window.siTestWrite = siTestWrite; window.siGenKey = siGenKey;
+    })();
     </script>
 </div>
