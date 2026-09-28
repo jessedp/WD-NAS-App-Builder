@@ -15,6 +15,7 @@ WD My Cloud OS5 still has an active user base, but the third-party app ecosystem
 | Boot Scripts *(boot4shell replacement)* | [download](https://github.com/jessedp/WD-NAS-App-Builder/releases/tag/latest-bootscripts) | [docs](docs/apps/bootscripts/README.md) |
 | [copyparty](https://github.com/9001/copyparty) | [download](https://github.com/jessedp/WD-NAS-App-Builder/releases/tag/latest-copyparty) | [docs](docs/apps/copyparty/README.md) |
 | [Entware](https://entware.net/) | [download](https://github.com/jessedp/WD-NAS-App-Builder/releases/tag/latest-entware) | [docs](docs/apps/entware/README.md) |
+| OS5 SysInfo *(wd-os5-exporter replacement)* | [download](https://github.com/jessedp/WD-NAS-App-Builder/releases/tag/latest-os5-sysinfo) | [docs](docs/apps/os5-sysinfo/README.md) |
 | [Syncthing](https://syncthing.net/) | [download](https://github.com/jessedp/WD-NAS-App-Builder/releases/tag/latest-syncthing) | [docs](docs/apps/syncthing/README.md) |
 | [Tailscale](https://tailscale.com/) | [download](https://github.com/jessedp/WD-NAS-App-Builder/releases/tag/latest-tailscale) | [docs](docs/apps/tailscale/README.md) |
 

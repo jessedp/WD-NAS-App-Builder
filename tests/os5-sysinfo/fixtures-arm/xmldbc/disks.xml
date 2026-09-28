@@ -1,0 +1,26 @@
+<disks>
+	<disk id="1">
+		<name>sda</name>
+		<scsi_path>/sys/bus/scsi/devices/0:0:0:0</scsi_path>
+		<connected>1</connected>
+		<vendor>WD</vendor>
+		<model>WDC WD60EFRX-68L0BN1</model>
+		<rev>82.00A82</rev>
+		<sn>WD-WX11D278ZZ1J</sn>
+		<dev>/dev/sda</dev>
+		<size>6001175126016</size>
+		<part_cnt>4</part_cnt>
+		<allowed>1</allowed>
+		<raid_uuid>b8d7a57f:66bd60d0:ea2c018d:e3d48b33</raid_uuid>
+		<failed>0</failed>
+		<healthy>1</healthy>
+		<removable>1</removable>
+		<roaming>0</roaming>
+		<temp>40</temp>
+		<over_temp>0</over_temp>
+		<smart>
+			<test></test>
+		</smart>
+		<sleep>0</sleep>
+	</disk>
+</disks>

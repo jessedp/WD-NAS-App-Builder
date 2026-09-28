@@ -1,0 +1,23 @@
+Package:			os5-sysinfo
+Version:			1.0.0
+Packager:			Jesse
+Email:
+Homepage:			https://github.com/jessedp/WD-NAS-App-Builder
+Description:		Exports NAS health as JSON: disks, RAID, volumes, CPU, RAM, temperatures. Serves it on its own port (optional API key) and/or writes it to a share. Works with Homepage, Uptime Kuma, Home Assistant.
+Icon:				os5-sysinfo.png
+AddonShowName:		OS5 SysInfo
+AddonIndexPage:		index.php
+AddonUsedPort:		8085
+AddonDefaultPort:	8085
+AddonDefaultGroup:
+AddonDefaultUser:
+InstDepend:
+InstConflict:
+StartDepend:
+StartConflict:
+CenterType:			1
+UserControl:		1
+MinFWVer:			5.27.157
+MaxFWVer:
+IndividualFlag:		1
+Hidden:				off

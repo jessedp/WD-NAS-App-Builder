@@ -1,0 +1,26 @@
+<vols>
+	<vol id="1">
+		<num>1</num>
+		<name>Volume_1</name>
+		<label>Volume_1</label>
+		<mnt>/mnt/HD/HD_a2</mnt>
+		<encrypted>0</encrypted>
+		<dev>/dev/md1</dev>
+		<unlocked>1</unlocked>
+		<mounted>1</mounted>
+		<size>17919083450368</size>
+		<uuid>b8d7a57f:66bd60d0:ea2c018d:e3d48b33</uuid>
+		<roaming>0</roaming>
+		<used_size>7902644518912</used_size>
+		<raid_level>raid5</raid_level>
+		<raid_state>degraded</raid_state>
+		<raid_state_detail></raid_state_detail>
+		<state></state>
+	</vol>
+	<total_size>17739892615865</total_size>
+	<total_used_size>7902644518912</total_used_size>
+	<total_unused_size>9837248096953</total_unused_size>
+	<total_size_h>17.7 TB</total_size_h>
+	<total_used_size_h>7.90 TB</total_used_size_h>
+	<total_unused_size_h>9.84 TB</total_unused_size_h>
+</vols>

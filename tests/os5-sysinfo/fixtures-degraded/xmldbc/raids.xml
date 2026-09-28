@@ -1,0 +1,66 @@
+<raids>
+	<dirty>0</dirty>
+	<cfg_mnts>all,/mnt/HD_a4,/mnt/HD_b4,/mnt/HD_c4,/mnt/HD_d4;</cfg_mnts>
+	<raid id="1">
+		<id>0</id>
+		<level>raid1</level>
+		<chunk_size>0</chunk_size>
+		<num_of_total_disks>4</num_of_total_disks>
+		<num_of_raid_disks>4</num_of_raid_disks>
+		<num_of_active_disks>4</num_of_active_disks>
+		<num_of_working_disks>4</num_of_working_disks>
+		<num_of_spare_disks>0</num_of_spare_disks>
+		<num_of_failed_disks>0</num_of_failed_disks>
+		<raid_disks>sda sdb sdc sdd</raid_disks>
+		<spare_disks></spare_disks>
+		<failed_disks></failed_disks>
+		<rebuilding_disks></rebuilding_disks>
+		<size>2144337920</size>
+		<used_size>2144337920</used_size>
+		<min_req_size>6000101730304</min_req_size>
+		<state>clean</state>
+		<state_detail></state_detail>
+		<uuid>ec909ce2:b5262c89:b4736c08:7f7b1966</uuid>
+		<dev>/dev/md0</dev>
+		<ar>0</ar>
+		<expand_size>0</expand_size>
+		<expand_no_replace>0</expand_no_replace>
+		<migrate_from></migrate_from>
+		<migrate_to></migrate_to>
+		<recover_failed>0</recover_failed>
+		<reshape_failed>0</reshape_failed>
+		<dirty>0</dirty>
+		<rebuilding_disks_></rebuilding_disks_>
+	</raid>
+	<raid id="2">
+		<id>1</id>
+		<level>raid5</level>
+		<chunk_size>65536</chunk_size>
+		<num_of_total_disks>4</num_of_total_disks>
+		<num_of_raid_disks>4</num_of_raid_disks>
+		<num_of_active_disks>3</num_of_active_disks>
+		<num_of_working_disks>3</num_of_working_disks>
+		<num_of_spare_disks>0</num_of_spare_disks>
+		<num_of_failed_disks>1</num_of_failed_disks>
+		<raid_disks>sda sdc sdb sdd</raid_disks>
+		<spare_disks></spare_disks>
+		<failed_disks>sdb</failed_disks>
+		<rebuilding_disks></rebuilding_disks>
+		<size>17990634897408</size>
+		<used_size>17990634897408</used_size>
+		<min_req_size>6000101730304</min_req_size>
+		<state>degraded</state>
+		<state_detail></state_detail>
+		<uuid>b8d7a57f:66bd60d0:ea2c018d:e3d48b33</uuid>
+		<dev>/dev/md1</dev>
+		<ar>0</ar>
+		<expand_size>0</expand_size>
+		<expand_no_replace>0</expand_no_replace>
+		<migrate_from></migrate_from>
+		<migrate_to></migrate_to>
+		<recover_failed>0</recover_failed>
+		<reshape_failed>0</reshape_failed>
+		<dirty>0</dirty>
+		<rebuilding_disks_></rebuilding_disks_>
+	</raid>
+</raids>

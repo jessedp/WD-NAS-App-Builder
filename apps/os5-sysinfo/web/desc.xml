@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<config>
+	<en-US>Exports NAS health as JSON: disks, RAID, volumes, CPU, RAM, temperatures. Serves it on its own port (optional API key) and/or writes it to a share. Works with Homepage, Uptime Kuma, Home Assistant.</en-US>
+</config>

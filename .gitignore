@@ -17,3 +17,6 @@ local.mk
 *.DS_Store
 *~
 /scratch
+
+__pycache__/
+*.pyc
