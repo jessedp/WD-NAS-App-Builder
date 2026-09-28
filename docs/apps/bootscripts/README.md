@@ -12,6 +12,8 @@ OS5 rebuilds the root filesystem on every reboot. Anything you change outside th
 2. Install the app via the "App Store" in the WD MyCloud web interface using the "Install an app manually" option.
 3. Make sure the app is **enabled**. Only enabled apps are started at boot.
 
+![Boot Scripts installed on os5 screen](images/bootscripts_installed.png)
+
 ## Usage
 
 The common case, keeping root's SSH keys, takes three steps:
@@ -27,6 +29,18 @@ From the same page you can also:
 - see which scripts will run, and open, edit, create or delete them
 - paste public keys for root's SSH access
 - press **Run now** to run everything immediately, and watch the log
+
+![Boot Scripts script list](images/bootscripts_scripts.png)
+
+Click a script or an example to open it in the editor. Save it under a new name to enable it.
+
+![Boot Scripts editor](images/bootscripts_editor.png)
+
+![Boot Scripts SSH keys for root](images/bootscripts_ssh_keys.png)
+
+The log at the bottom of the page shows every run: why it started, each script's output and exit status.
+
+![Boot Scripts log](images/bootscripts_log.png)
 
 Everything lives in `bootscripts_conf/` next to the app on your data volume, so you can also manage it over SSH or a share:
 

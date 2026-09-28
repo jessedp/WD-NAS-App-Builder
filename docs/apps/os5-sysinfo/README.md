@@ -12,6 +12,8 @@ This is a native replacement for the container-based [wd-os5-exporter](https://g
 2. Install the app via the "App Store" in the WD MyCloud web interface using the "Install an app manually" option.
 3. Make sure the app is **enabled**.
 
+![OS5 SysInfo installed on os5 screen](images/sysinfo_installed.png)
+
 Out of the box the app serves `http://<nas-ip>:8085/status` on every interface with no key. Open the app's **Configure** page to add a key, bind it to one address, write a copy to a share, or change the interval.
 
 Use the NAS **IP address** in every consumer, not its name. The WD UI proxy rejects unknown host names, and dashboards should not depend on name resolution anyway.
@@ -33,6 +35,16 @@ Click **Configure** on the app to open its page inside the NAS web UI:
 - **Configuration**: listener on/off, bind address (pick your Tailscale address to expose it only over Tailscale), port, API key (with a generator), output file with a share picker and a Test write button, interval, whether disk model names and serial numbers are included, and an optional heartbeat URL. Save restarts the collector.
 - **Homepage widget**: a ready-to-paste YAML snippet for your URL.
 - **Latest JSON** and the **log**.
+
+![OS5 SysInfo status](images/sysinfo_status.png)
+
+![OS5 SysInfo configuration](images/sysinfo_config.png)
+
+![OS5 SysInfo Homepage widget snippet](images/sysinfo_homepage.png)
+
+![OS5 SysInfo latest JSON](images/sysinfo_json.png)
+
+![OS5 SysInfo log](images/sysinfo_log.png)
 
 Settings live in `os5-sysinfo_conf/os5-sysinfo.conf` next to the app on your data volume and survive upgrades and removal. The file holds the API key, so keep it private.
 
