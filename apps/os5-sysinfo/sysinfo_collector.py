@@ -13,6 +13,13 @@ document:
 
 Python 3 standard library only; nothing else is available on the device.
 
+Credit: the knowledge that WD keeps this data in the sysinfo xmldb, reachable
+with `xmldbc -p /disks|/raids|/vols <file> -S /var/run/xmldb_sock_sysinfo`,
+comes from fata13rorr/wd-os5-exporter (MIT), docs/WD-OS5-INTERNALS.md:
+https://github.com/fata13rorr/wd-os5-exporter
+The top-level JSON field names are kept compatible with that project. The
+parsing and health logic here were written fresh against dumps from a PR4100.
+
     sysinfo_collector.py --conf /mnt/HD/HD_a2/Nas_Prog/os5-sysinfo_conf
     sysinfo_collector.py --conf DIR --once        # one collect to stdout
 

@@ -2,7 +2,7 @@
 
 Exports NAS health as JSON: disks, RAID, volumes, CPU, RAM, temperatures, uptime. Runs on the NAS itself, so nothing needs SSH access or a root key. Serves the JSON on its own port (optional API key) and/or writes it to a share.
 
-Replaces the SSH-based [wd-os5-exporter](https://github.com/fata13rorr/wd-os5-exporter) with a native app; its Homepage field names are kept for compatibility. See [DESIGN.md](../../docs/apps/os5-sysinfo/DESIGN.md) for why it is built this way, and [the user docs](../../docs/apps/os5-sysinfo/README.md) for usage.
+Replaces the SSH-based [wd-os5-exporter](https://github.com/fata13rorr/wd-os5-exporter) with a native app. That project (MIT) did the reverse engineering this depends on: its [WD-OS5-INTERNALS.md](https://github.com/fata13rorr/wd-os5-exporter/blob/main/docs/WD-OS5-INTERNALS.md) documents that WD keeps disk, RAID and volume state in the sysinfo xmldb and how to dump it with `xmldbc`. Its Homepage field names are kept for compatibility. No code was copied; the parsers and health logic were written against dumps from a PR4100. See [DESIGN.md](../../docs/apps/os5-sysinfo/DESIGN.md) for why it is built this way, and [the user docs](../../docs/apps/os5-sysinfo/README.md) for usage.
 
 ## Building the app
 

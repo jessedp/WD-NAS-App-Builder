@@ -4,7 +4,7 @@ Exports your NAS's health as JSON: disks, RAID, volumes, CPU, RAM, temperatures,
 
 Made for dashboards and monitors: [Homepage](https://gethomepage.dev) `customapi` widgets, Uptime Kuma, Home Assistant REST sensors, or anything that can read JSON over HTTP or from a file on a share.
 
-This is a native replacement for the container-based [wd-os5-exporter](https://github.com/fata13rorr/wd-os5-exporter), which pulled the same data over SSH with a root-equivalent key. The JSON field names are the same, so existing Homepage widgets keep working.
+This is a native replacement for the container-based [wd-os5-exporter](https://github.com/fata13rorr/wd-os5-exporter), which pulled the same data over SSH with a root-equivalent key. The JSON field names are the same, so existing Homepage widgets keep working. See [Credits](#credits).
 
 ## Installation
 
@@ -112,3 +112,7 @@ Health is `Critical` for a failed disk, a RAID with failed disks or in a degrade
 ## Persistent Data
 
 `os5-sysinfo_conf/` is kept when the app is upgraded or removed. Delete it yourself for a clean slate.
+
+## Credits
+
+[wd-os5-exporter](https://github.com/fata13rorr/wd-os5-exporter) (MIT) worked out where WD OS5 keeps this data and how to get at it: the sysinfo xmldb, its socket at `/var/run/xmldb_sock_sysinfo`, and the `/disks`, `/raids` and `/vols` trees dumped with `xmldbc`. That is documented in its [WD-OS5-INTERNALS.md](https://github.com/fata13rorr/wd-os5-exporter/blob/main/docs/WD-OS5-INTERNALS.md) and is the foundation of this app. Its Homepage-facing field names are kept so widgets are interchangeable. No code was copied; this app's parsing, health derivation, listener and config page were written from scratch against dumps taken from a PR4100.
