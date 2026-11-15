@@ -79,8 +79,8 @@ These exist in the repo but are not pre-built or automatically updated:
 - [phpMyAdmin 5.2.1](https://files.phpmyadmin.net/phpMyAdmin/5.2.1/phpMyAdmin-5.2.1-all-languages.tar.gz)
 - [Mailpit 1.21.8](https://github.com/axllent/mailpit/releases/download/v1.21.8/mailpit-linux-amd64.tar.gz)
 - [ValKey 8.0.1](https://github.com/valkey-io/valkey/archive/refs/tags/8.0.1.tar.gz)
-- [Docker 29.1.3](https://download.docker.com/linux/static/stable/x86_64/docker-29.1.3.tgz) / [Docker-Compose 2.39.4](https://github.com/docker/compose/releases/download/v2.39.4/docker-compose-linux-x86_64) / [Portainer 2.25.1](https://github.com/portainer/portainer/releases/download/2.25.1/portainer-2.25.1-linux-amd64.tar.gz)
-  - _Note_: Mostly unusable. On the PR4100 (and likely most devices), all ports share the same network interface — containers exposing ports already used by the NAS (80, 443, etc.) will conflict.
+- [Docker 27.5.1](https://download.docker.com/linux/static/stable/x86_64/docker-27.5.1.tgz) / [Docker-Compose 2.39.4](https://github.com/docker/compose/releases/download/v2.39.4/docker-compose-linux-x86_64) / [Portainer 2.25.1](https://github.com/portainer/portainer/releases/download/2.25.1/portainer-2.25.1-linux-amd64.tar.gz)
+  - _Note_: Pinned to 27.5.1, the last release that works on OS5. The 4.14 kernel has no overlayfs and no iptables `raw` table; Docker 28+ needs `raw` for its bridge rules and 29+ defaults to the containerd image store, which needs overlayfs, so newer builds only run with fragile workarounds. Storage falls back to the slow `vfs` driver, and containers cannot use ports the NAS already uses (80, 443, etc.).
 
 ### Project Structure
 
